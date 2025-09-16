@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+from excel_formatter import ExcelFormatter
 
 warnings.filterwarnings("ignore")
 
@@ -20,6 +21,7 @@ class ZapScraper:
         self.driver = None
         self.data_list = []
         self.debug = True  # Ativar debug para análise
+        self.excel_formatter = ExcelFormatter()
     
     def verificar_chrome_instalado(self):
         """Verifica se o Chrome está instalado no sistema"""
@@ -192,7 +194,7 @@ class ZapScraper:
             # Extrai localização - voltar ao seletor original
             localizacao_element = anuncio_soup.find("h2", {"data-cy": "rp-cardProperty-location-txt"})
             if localizacao_element:
-                dados['Localidade'] = localizacao_element.text.strip().replace("Apartamento para comprar em", "").strip()
+                dados['Descrição'] = localizacao_element.text.strip().replace("Apartamento para comprar em", "").strip()
                 
             # Extrai endereço - voltar ao seletor original
             endereco_element = anuncio_soup.find("p", {"data-cy": "rp-cardProperty-street-txt"})
@@ -488,6 +490,20 @@ class ZapScraper:
                 df_cleaned.to_csv(filename, index=False)
                 print(f"\nDados finais salvos em: {filename}")
                 
+                # Gerar Excel formatado automaticamente
+                print("\n🔄 Gerando arquivo Excel formatado automaticamente...")
+                excel_file = self.gerar_excel_formatado(df_cleaned)
+                if excel_file:
+                    print(f"📊 Arquivo Excel formatado criado: {excel_file}")
+                    print(f"📁 Localização: {os.path.abspath(excel_file)}")
+                    
+                    # Mostrar informações sobre o Excel gerado
+                    tamanho_excel = os.path.getsize(excel_file) / 1024  # KB
+                    print(f"💾 Tamanho do arquivo Excel: {tamanho_excel:.1f} KB")
+                    print(f"📋 O arquivo Excel contém 6 abas com análises detalhadas dos dados")
+                else:
+                    print("❌ Erro ao criar arquivo Excel")
+                
                 return df_cleaned
         except Exception as e:
             print(f"Erro na análise: {e}")
@@ -505,15 +521,71 @@ class ZapScraper:
             print(f"Total de Linhas: {stats['total_linhas']}")
             print(f"Preço Médio: R$ {stats['preco_medio']:.2f}".replace('.', ','))
             print(f"Área Média: {stats['area_media']:.2f} m²".replace('.', ','))
+    
+    def gerar_excel_formatado(self, df, nome_arquivo=None):
+        """Gera arquivo Excel formatado com todas as abas"""
+        try:
+            if df is None or df.empty:
+                print("❌ Nenhum dado disponível para gerar Excel")
+                return None
+            
+            print("\n🔄 Gerando arquivo Excel formatado...")
+            excel_file = self.excel_formatter.gerar_excel_formatado(df, nome_arquivo)
+            
+            if excel_file:
+                print(f"✅ Excel formatado criado com sucesso: {excel_file}")
+                return excel_file
+            else:
+                print("❌ Erro ao criar arquivo Excel")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Erro ao gerar Excel: {e}")
+            return None
 
 
 # Função principal para uso direto
 def main():
     """Função principal para executar o scraper"""
-    url_inicial = input("Digite a URL para análise: ")
+    print("🏠 SCRAPER ZAP IMÓVEIS COM EXCEL AUTOMÁTICO")
+    print("=" * 50)
+    
+    url_inicial = input("Digite a URL do Zap Imóveis para análise: ").strip()
+    
+    if not url_inicial:
+        print("❌ URL não fornecida!")
+        return None
+    
+    try:
+        max_paginas = int(input("Quantas páginas processar? (padrão: 5): ") or "5")
+    except ValueError:
+        max_paginas = 5
+    
+    print(f"\n🔄 Iniciando extração de dados...")
+    print(f"📄 Páginas a processar: {max_paginas}")
+    print("⏳ Aguarde enquanto coletamos os dados e geramos o Excel...")
+    
     scraper = ZapScraper()
-    df_resultado = scraper.analisar_site(url_inicial)
-    return df_resultado
+    df_resultado = scraper.analisar_site(url_inicial, max_paginas)
+    
+    if df_resultado is not None and not df_resultado.empty:
+        print(f"\n🎉 PROCESSO CONCLUÍDO COM SUCESSO!")
+        print(f"📊 Total de imóveis coletados: {len(df_resultado)}")
+        print(f"📁 Arquivos gerados automaticamente:")
+        
+        # Listar arquivos CSV e Excel gerados
+        arquivos_gerados = [f for f in os.listdir('.') if f.startswith('dados_final_') or f.startswith('dados_zap_formatado_')]
+        for arquivo in sorted(arquivos_gerados)[-2:]:  # Últimos 2 arquivos
+            tamanho = os.path.getsize(arquivo) / 1024
+            tipo = "Excel" if arquivo.endswith('.xlsx') else "CSV"
+            print(f"  📄 {arquivo} ({tipo}, {tamanho:.1f} KB)")
+        
+        print(f"\n✅ O arquivo Excel contém análises completas dos dados!")
+        return df_resultado
+    else:
+        print("\n❌ ERRO na execução do scraper")
+        print("💡 Verifique a URL e tente novamente")
+        return None
 
 
 if __name__ == "__main__":

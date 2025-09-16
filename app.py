@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore")
 
 # Importar as funções do scraper
 from zap_scraper import ZapScraper
+from excel_formatter import ExcelFormatter
 
 # Configuração da página
 st.set_page_config(
@@ -108,6 +109,7 @@ def main():
         st.markdown("### 📊 Opções de Análise")
         remover_outliers = st.checkbox("Remover outliers", value=True)
         gerar_graficos = st.checkbox("Gerar gráficos", value=True)
+        gerar_excel = st.checkbox("Gerar Excel formatado", value=True)
         
         st.markdown("---")
         st.markdown("### ℹ️ Sobre")
@@ -117,6 +119,7 @@ def main():
         - Área e características
         - Análise estatística
         - Gráficos e visualizações
+        - Excel formatado com 6 abas
         """)
     
     # Área principal centralizada
@@ -153,7 +156,7 @@ def main():
         with col_btn2:
             if st.button("🚀 Iniciar Scraping", type="primary", disabled=not url_input, use_container_width=True):
                 if url_input:
-                    executar_scraping(url_input, max_paginas, timeout, remover_outliers, gerar_graficos)
+                    executar_scraping(url_input, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel)
         
         # Espaçamento após o botão
         st.markdown("<br>", unsafe_allow_html=True)
@@ -162,7 +165,7 @@ def main():
     if 'scraping_status' in st.session_state:
         mostrar_resultados()
 
-def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_graficos):
+def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel):
     """Executa o scraping e mostra o progresso"""
     
     # Inicializar variáveis de sessão
@@ -231,11 +234,31 @@ def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_grafico
             estatisticas = scraper.calcular_estatisticas(df)
             st.session_state.estatisticas = estatisticas
             
-            # Salvar arquivos
+            # Salvar arquivos CSV
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = f'dados_zap_{timestamp}.csv'
-            df.to_csv(filename, index=False)
-            st.session_state.arquivos_gerados.append(filename)
+            filename_csv = f'dados_zap_{timestamp}.csv'
+            df.to_csv(filename_csv, index=False)
+            st.session_state.arquivos_gerados.append(filename_csv)
+            
+            # Gerar Excel se solicitado
+            if gerar_excel:
+                status_text.text("📊 Gerando Excel formatado...")
+                progress_bar.progress(95)
+                log_container.text("Criando arquivo Excel com 6 abas de análise...")
+                
+                try:
+                    excel_formatter = ExcelFormatter()
+                    filename_excel = f'dados_zap_formatado_{timestamp}.xlsx'
+                    excel_file = excel_formatter.gerar_excel_formatado(df, filename_excel)
+                    
+                    if excel_file:
+                        st.session_state.arquivos_gerados.append(excel_file)
+                        log_container.text("✅ Excel formatado criado com sucesso!")
+                    else:
+                        log_container.text("⚠️ Erro ao criar Excel formatado")
+                        
+                except Exception as e:
+                    log_container.text(f"⚠️ Erro ao gerar Excel: {str(e)}")
             
             status_text.text("🎉 Scraping concluído!")
             progress_bar.progress(100)
@@ -374,18 +397,56 @@ def mostrar_resultados():
                 )
                 st.plotly_chart(fig_scatter, use_container_width=True)
         
+        # Informações sobre Excel
+        excel_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.xlsx')]
+        if excel_files:
+            st.info("""
+            📊 **Arquivo Excel Gerado!** 
+            
+            O arquivo Excel contém **6 abas** com análises detalhadas:
+            - 📋 **Dados Completos**: Todos os imóveis coletados
+            - 📈 **Resumo Estatístico**: Métricas gerais
+            - 💰 **Análise de Preços**: Distribuição por faixas
+            - 🏠 **Análise de Áreas**: Distribuição por faixas
+            - 🏆 **Top Imóveis**: Melhores preços por m²
+            - 🔍 **Filtros Especiais**: Imóveis com características específicas
+            """)
+        
         # Download de arquivos
         st.header("💾 Download dos Arquivos")
         
-        for arquivo in st.session_state.arquivos_gerados:
-            if os.path.exists(arquivo):
-                with open(arquivo, 'rb') as f:
-                    st.download_button(
-                        label=f"📥 Baixar {arquivo}",
-                        data=f.read(),
-                        file_name=arquivo,
-                        mime="text/csv"
-                    )
+        col_download1, col_download2 = st.columns(2)
+        
+        with col_download1:
+            st.subheader("📄 Arquivo CSV")
+            csv_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.csv')]
+            for arquivo in csv_files:
+                if os.path.exists(arquivo):
+                    with open(arquivo, 'rb') as f:
+                        st.download_button(
+                            label=f"📥 Baixar CSV: {arquivo}",
+                            data=f.read(),
+                            file_name=arquivo,
+                            mime="text/csv",
+                            use_container_width=True
+                        )
+        
+        with col_download2:
+            st.subheader("📊 Arquivo Excel")
+            excel_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.xlsx')]
+            for arquivo in excel_files:
+                if os.path.exists(arquivo):
+                    with open(arquivo, 'rb') as f:
+                        st.download_button(
+                            label=f"📥 Baixar Excel: {arquivo}",
+                            data=f.read(),
+                            file_name=arquivo,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True
+                        )
+            
+            if not excel_files:
+                st.info("💡 Ative a opção 'Gerar Excel formatado' na sidebar para criar arquivos Excel")
         
         # Estatísticas detalhadas
         st.header("📊 Estatísticas Detalhadas")
