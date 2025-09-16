@@ -37,8 +37,8 @@ class ExcelFormatter:
         worksheet['A1'].fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
         worksheet['A1'].alignment = Alignment(horizontal='center', vertical='center')
         
-        # Configurar cabeçalhos das colunas
-        for idx, coluna in enumerate(colunas, 2):
+        # Configurar cabeçalhos das colunas (começando da coluna 1, não 2)
+        for idx, coluna in enumerate(colunas, 1):
             cell = worksheet.cell(row=2, column=idx, value=coluna)
             cell.font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
             cell.fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
@@ -58,7 +58,7 @@ class ExcelFormatter:
         # Formatar células de dados
         for row in range(start_row, worksheet.max_row + 1):
             for col in range(1, len(colunas) + 1):
-                cell = worksheet.cell(row=row, column=col + 1)
+                cell = worksheet.cell(row=row, column=col)  # Corrigido: col em vez de col + 1
                 cell.font = Font(name='Arial', size=10)
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 
@@ -101,7 +101,7 @@ class ExcelFormatter:
         
         for idx, coluna in enumerate(colunas, 1):
             width = column_widths.get(coluna, 15)
-            worksheet.column_dimensions[chr(64 + idx + 1)].width = width
+            worksheet.column_dimensions[chr(64 + idx)].width = width  # Corrigido: idx em vez de idx + 1
     
     def criar_aba_dados_completos(self, df):
         """Cria aba com todos os dados"""

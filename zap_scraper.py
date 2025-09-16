@@ -22,6 +22,84 @@ class ZapScraper:
         self.data_list = []
         self.debug = True  # Ativar debug para análise
         self.excel_formatter = ExcelFormatter()
+        self.imoveis_unicos = set()  # Set para armazenar identificadores únicos
+        self.duplicatas_detectadas = 0  # Contador de duplicatas
+    
+    def criar_identificador_imovel(self, dados):
+        """Cria um identificador único para o imóvel baseado em suas características"""
+        try:
+            # Usar características principais para criar identificador único
+            identificador_parts = []
+            
+            # Descrição (sem "Apartamento para comprar com" para normalizar)
+            if 'Descrição' in dados:
+                descricao = dados['Descrição'].replace("Apartamento para comprar com", "").strip()
+                identificador_parts.append(descricao)
+            
+            # Endereço
+            if 'Endereco' in dados and dados['Endereco']:
+                identificador_parts.append(dados['Endereco'].strip())
+            
+            # Área (m²)
+            if 'M2' in dados:
+                identificador_parts.append(f"{dados['M2']:.1f}")
+            
+            # Preço
+            if 'Preco' in dados:
+                identificador_parts.append(f"{dados['Preco']:.0f}")
+            
+            # Quartos, banheiros, vagas
+            if 'Quartos' in dados:
+                identificador_parts.append(f"Q{dados['Quartos']}")
+            if 'Banheiros' in dados:
+                identificador_parts.append(f"B{dados['Banheiros']}")
+            if 'Vagas' in dados:
+                identificador_parts.append(f"V{dados['Vagas']}")
+            
+            # Criar hash do identificador
+            identificador = "|".join(identificador_parts)
+            return hash(identificador)
+            
+        except Exception as e:
+            print(f"Erro ao criar identificador: {e}")
+            return None
+    
+    def verificar_duplicata(self, dados):
+        """Verifica se o imóvel já foi coletado anteriormente"""
+        try:
+            identificador = self.criar_identificador_imovel(dados)
+            if identificador is None:
+                return True  # Se não conseguir criar identificador, considera duplicata
+            
+            if identificador in self.imoveis_unicos:
+                self.duplicatas_detectadas += 1
+                print(f"\n🔄 Duplicata detectada! Total de duplicatas: {self.duplicatas_detectadas}")
+                return True
+            else:
+                self.imoveis_unicos.add(identificador)
+                return False
+                
+        except Exception as e:
+            print(f"Erro ao verificar duplicata: {e}")
+            return True  # Em caso de erro, considera duplicata para segurança
+    
+    def resetar_contadores_duplicatas(self):
+        """Reseta os contadores de duplicatas para uma nova execução"""
+        self.imoveis_unicos.clear()
+        self.duplicatas_detectadas = 0
+        print("🔄 Contadores de duplicatas resetados")
+    
+    def obter_estatisticas_duplicatas(self):
+        """Retorna estatísticas sobre duplicatas detectadas"""
+        total_processados = len(self.imoveis_unicos) + self.duplicatas_detectadas
+        taxa_duplicatas = (self.duplicatas_detectadas / total_processados * 100) if total_processados > 0 else 0
+        
+        return {
+            'imoveis_unicos': len(self.imoveis_unicos),
+            'duplicatas_detectadas': self.duplicatas_detectadas,
+            'total_processados': total_processados,
+            'taxa_duplicatas': taxa_duplicatas
+        }
     
     def verificar_chrome_instalado(self):
         """Verifica se o Chrome está instalado no sistema"""
@@ -286,6 +364,7 @@ class ZapScraper:
     def extrair_dados_pagina(self, url, max_paginas=10):
         """Extrai dados de múltiplas páginas do Zap Imóveis"""
         self.data_list = []
+        self.resetar_contadores_duplicatas()  # Resetar contadores de duplicatas
         pagina_atual = 1
         
         try:
@@ -332,7 +411,11 @@ class ZapScraper:
                             dados = self.extrair_dados_anuncio(soup)
                             
                             if dados:
-                                self.data_list.append(dados)
+                                # Verificar se é duplicata antes de adicionar
+                                if not self.verificar_duplicata(dados):
+                                    self.data_list.append(dados)
+                                else:
+                                    print(f"\rDuplicata ignorada - elemento {idx}/{num_elementos}", end="")
                         except Exception as e:
                             print(f"\nErro ao processar elemento {idx}: {e}")
                             continue
@@ -475,6 +558,14 @@ class ZapScraper:
             
             df = self.extrair_dados_pagina(url_inicial, max_paginas)
             if df is not None and not df.empty:
+                # Mostrar estatísticas de duplicatas
+                stats_duplicatas = self.obter_estatisticas_duplicatas()
+                print(f"\n📊 ESTATÍSTICAS DE DUPLICATAS:")
+                print(f"🏠 Imóveis únicos coletados: {stats_duplicatas['imoveis_unicos']}")
+                print(f"🔄 Duplicatas detectadas: {stats_duplicatas['duplicatas_detectadas']}")
+                print(f"📈 Taxa de duplicatas: {stats_duplicatas['taxa_duplicatas']:.1f}%")
+                print(f"📋 Total processado: {stats_duplicatas['total_processados']}")
+                
                 print("\nEstatísticas antes da remoção de outliers:")
                 stats = self.calcular_estatisticas(df)
                 self.imprimir_estatisticas(stats)

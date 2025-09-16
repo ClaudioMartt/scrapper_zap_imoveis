@@ -110,6 +110,7 @@ def main():
         remover_outliers = st.checkbox("Remover outliers", value=True)
         gerar_graficos = st.checkbox("Gerar gráficos", value=True)
         gerar_excel = st.checkbox("Gerar Excel formatado", value=True)
+        detectar_duplicatas = st.checkbox("Detectar e remover duplicatas", value=True)
         
         st.markdown("---")
         st.markdown("### ℹ️ Sobre")
@@ -120,6 +121,7 @@ def main():
         - Análise estatística
         - Gráficos e visualizações
         - Excel formatado com 6 abas
+        - Detecção automática de duplicatas
         """)
     
     # Área principal centralizada
@@ -156,7 +158,7 @@ def main():
         with col_btn2:
             if st.button("🚀 Iniciar Scraping", type="primary", disabled=not url_input, use_container_width=True):
                 if url_input:
-                    executar_scraping(url_input, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel)
+                    executar_scraping(url_input, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel, detectar_duplicatas)
         
         # Espaçamento após o botão
         st.markdown("<br>", unsafe_allow_html=True)
@@ -165,7 +167,7 @@ def main():
     if 'scraping_status' in st.session_state:
         mostrar_resultados()
 
-def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel):
+def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel, detectar_duplicatas):
     """Executa o scraping e mostra o progresso"""
     
     # Inicializar variáveis de sessão
@@ -205,7 +207,10 @@ def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_grafico
         # Executar scraping
         status_text.text("🔍 Coletando dados dos imóveis...")
         progress_bar.progress(30)
-        log_container.text("Acessando página e coletando dados...")
+        if detectar_duplicatas:
+            log_container.text("Acessando página e coletando dados (detecção de duplicatas ativa)...")
+        else:
+            log_container.text("Acessando página e coletando dados...")
         
         # Aqui você integraria com a função real do scraper
         dados = scraper.extrair_dados_pagina(url, max_paginas)
@@ -233,6 +238,10 @@ def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_grafico
             
             estatisticas = scraper.calcular_estatisticas(df)
             st.session_state.estatisticas = estatisticas
+            
+            # Obter estatísticas de duplicatas
+            stats_duplicatas = scraper.obter_estatisticas_duplicatas()
+            st.session_state.estatisticas_duplicatas = stats_duplicatas
             
             # Salvar arquivos CSV
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -284,6 +293,43 @@ def mostrar_resultados():
         col_msg1, col_msg2, col_msg3 = st.columns([1, 2, 1])
         with col_msg2:
             st.success("✅ Scraping concluído com sucesso!")
+        
+        # Mostrar estatísticas de duplicatas
+        if 'estatisticas_duplicatas' in st.session_state:
+            st.header("🔄 Estatísticas de Duplicatas")
+            
+            col_dup1, col_dup2, col_dup3, col_dup4 = st.columns(4)
+            
+            with col_dup1:
+                st.metric(
+                    "🏠 Imóveis Únicos",
+                    st.session_state.estatisticas_duplicatas.get('imoveis_unicos', 0)
+                )
+            
+            with col_dup2:
+                st.metric(
+                    "🔄 Duplicatas Detectadas",
+                    st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0)
+                )
+            
+            with col_dup3:
+                taxa_dup = st.session_state.estatisticas_duplicatas.get('taxa_duplicatas', 0)
+                st.metric(
+                    "📈 Taxa de Duplicatas",
+                    f"{taxa_dup:.1f}%"
+                )
+            
+            with col_dup4:
+                st.metric(
+                    "📋 Total Processado",
+                    st.session_state.estatisticas_duplicatas.get('total_processados', 0)
+                )
+            
+            # Mensagem informativa sobre duplicatas
+            if st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0) > 0:
+                st.success(f"✅ Sistema de detecção de duplicatas funcionando! {st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0)} duplicatas foram automaticamente removidas.")
+            else:
+                st.info("ℹ️ Nenhuma duplicata detectada nesta execução.")
         
         # Mostrar estatísticas principais
         st.header("📊 Resumo dos Dados Coletados")
