@@ -17,158 +17,193 @@ from excel_formatter import ExcelFormatter
 
 # Configuração da página
 st.set_page_config(
-    page_title="🏠 Zap Imóveis Scraper",
+    page_title="Zap Imóveis Scraper",
     page_icon="🏠",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# CSS personalizado para melhorar a aparência
+# CSS personalizado estilo Google
 st.markdown("""
 <style>
-    .main-header {
+    /* Esconder elementos do Streamlit */
+    .stApp > header {
+        visibility: hidden;
+    }
+    .stApp > div:first-child {
+        padding-top: 0rem;
+    }
+    
+    /* Container principal centralizado */
+    .main-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
         text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 10px;
+    }
+    
+    /* Logo estilo Google */
+    .logo {
+        font-size: 4rem;
+        font-weight: 400;
+        color: #4285f4;
+        margin-bottom: 2rem;
+        font-family: 'Product Sans', Arial, sans-serif;
+    }
+    
+    /* Barra de busca estilo Google */
+    .search-container {
+        position: relative;
         margin-bottom: 2rem;
     }
-    .metric-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border-left: 4px solid #667eea;
-    }
-    .success-message {
-        background: #d4edda;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 5px;
-        border: 1px solid #c3e6cb;
-    }
-    .info-message {
-        background: #d1ecf1;
-        color: #0c5460;
-        padding: 1rem;
-        border-radius: 5px;
-        border: 1px solid #bee5eb;
-    }
-    .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    }
-    .url-input {
-        font-size: 16px;
-        padding: 10px;
-    }
-    .search-container {
-        text-align: center;
-        max-width: 600px;
-        margin: 0 auto;
-    }
+    
     .search-box {
         width: 100%;
+        max-width: 500px;
         padding: 12px 20px;
         font-size: 16px;
-        border: 2px solid #ddd;
-        border-radius: 25px;
+        border: 1px solid #dfe1e5;
+        border-radius: 24px;
         outline: none;
-        transition: border-color 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px 1px rgba(64,60,67,.16);
     }
+    
+    .search-box:hover {
+        box-shadow: 0 2px 8px 1px rgba(64,60,67,.24);
+    }
+    
     .search-box:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        border-color: #4285f4;
+        box-shadow: 0 2px 8px 1px rgba(64,60,67,.24);
     }
-    .progress-container {
+    
+    /* Botão estilo Google */
+    .google-button {
+        background-color: #f8f9fa;
+        border: 1px solid #f8f9fa;
+        border-radius: 4px;
+        color: #3c4043;
+        font-size: 14px;
+        padding: 10px 20px;
+        margin: 11px 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .google-button:hover {
+        box-shadow: 0 1px 1px rgba(0,0,0,.1);
+        background-color: #f8f9fa;
+        border: 1px solid #dadce0;
+        color: #202124;
+    }
+    
+    .google-button-primary {
+        background-color: #4285f4;
+        color: white;
+        border: 1px solid #4285f4;
+    }
+    
+    .google-button-primary:hover {
+        background-color: #3367d6;
+        border: 1px solid #3367d6;
+    }
+    
+    /* Container de status */
+    .status-container {
         max-width: 600px;
-        margin: 0 auto;
+        margin: 2rem auto;
         text-align: center;
+    }
+    
+    .status-message {
+        font-size: 14px;
+        color: #5f6368;
+        margin: 1rem 0;
+    }
+    
+    /* Barra de progresso personalizada */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #4285f4 0%, #34a853 100%);
+    }
+    
+    /* Resultados */
+    .results-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        text-align: left;
+    }
+    
+    /* Esconder elementos desnecessários */
+    .stApp > div:first-child > div:first-child > div:first-child {
+        display: none;
+    }
+    
+    /* Espaçamento */
+    .spacing {
+        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
 def main():
-    # Header principal
+    # Container principal estilo Google
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    
+    # Logo estilo Google
     st.markdown("""
-    <div class="main-header">
-        <h1>🏠 Zap Imóveis Scraper</h1>
-        <p>Extraia dados de imóveis do Zap Imóveis de forma rápida e eficiente</p>
+    <div class="logo">
+        🏠 Zap Scraper
     </div>
     """, unsafe_allow_html=True)
     
-    # Sidebar para configurações
-    with st.sidebar:
-        st.header("⚙️ Configurações")
-        
-        # Configurações do scraper
-        max_paginas = st.slider("Número máximo de páginas", 1, 20, 5)
-        timeout = st.slider("Timeout (segundos)", 10, 60, 30)
-        
-        st.markdown("---")
-        st.markdown("### 📊 Opções de Análise")
-        remover_outliers = st.checkbox("Remover outliers", value=True)
-        gerar_graficos = st.checkbox("Gerar gráficos", value=True)
-        gerar_excel = st.checkbox("Gerar Excel formatado", value=True)
-        detectar_duplicatas = st.checkbox("Detectar e remover duplicatas", value=True)
-        
-        st.markdown("---")
-        st.markdown("### ℹ️ Sobre")
-        st.info("""
-        Esta ferramenta extrai dados de imóveis do Zap Imóveis incluindo:
-        - Preço e localização
-        - Área e características
-        - Análise estatística
-        - Gráficos e visualizações
-        - Excel formatado com 6 abas
-        - Detecção automática de duplicatas
-        """)
+    # Barra de URL centralizada
+    st.markdown('<div class="search-container">', unsafe_allow_html=True)
     
-    # Área principal centralizada
-    st.markdown("---")
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    url_input = st.text_input(
+        "",
+        placeholder="Cole aqui a URL do Zap Imóveis...",
+        key="url_input",
+        label_visibility="collapsed"
+    )
     
-    # Container centralizado
-    col1, col2, col3 = st.columns([1, 2, 1])
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Validação da URL
+    if url_input and "zapimoveis.com.br" not in url_input:
+        st.error("⚠️ Por favor, insira uma URL válida do Zap Imóveis")
+        url_input = None
+    
+    # Botões estilo Google
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        pass  # Espaço vazio
     
     with col2:
-        st.markdown('<div class="search-container">', unsafe_allow_html=True)
-        st.markdown("### 🔗 URL do Zap Imóveis")
-        
-        # Input para URL centralizado
-        url_input = st.text_input(
-            "",
-            placeholder="https://www.zapimoveis.com.br/venda/apartamentos/...",
-            help="Cole a URL completa da página de busca do Zap Imóveis",
-            key="url_input",
-            label_visibility="collapsed"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Validação da URL
-        if url_input and "zapimoveis.com.br" not in url_input:
-            st.error("⚠️ Por favor, insira uma URL válida do Zap Imóveis")
-            url_input = None
-        
-        # Espaçamento
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Botão centralizado
-        col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
-        with col_btn2:
-            if st.button("🚀 Iniciar Scraping", type="primary", disabled=not url_input, use_container_width=True):
-                if url_input:
-                    executar_scraping(url_input, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel, detectar_duplicatas)
-        
-        # Espaçamento após o botão
-        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🚀 Iniciar Scraping", disabled=not url_input, use_container_width=True):
+            if url_input:
+                executar_scraping(url_input)
+    
+    with col3:
+        pass  # Espaço vazio
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Área de status e resultados
     if 'scraping_status' in st.session_state:
         mostrar_resultados()
 
-def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_graficos, gerar_excel, detectar_duplicatas):
+def executar_scraping(url):
     """Executa o scraping e mostra o progresso"""
+    
+    # Configurações padrão
+    max_paginas = 5
+    timeout = 30
+    remover_outliers = True
+    gerar_graficos = True
+    gerar_excel = True
+    detectar_duplicatas = True
     
     # Inicializar variáveis de sessão
     st.session_state.scraping_status = "iniciando"
@@ -176,24 +211,14 @@ def executar_scraping(url, max_paginas, timeout, remover_outliers, gerar_grafico
     st.session_state.arquivos_gerados = []
     st.session_state.estatisticas = {}
     
-    # Container para progresso
-    progress_container = st.container()
-    status_container = st.container()
-    results_container = st.container()
+    # Container para progresso centralizado
+    st.markdown('<div class="status-container">', unsafe_allow_html=True)
     
-    with progress_container:
-        # Container centralizado para progresso
-        col_prog1, col_prog2, col_prog3 = st.columns([1, 2, 1])
-        
-        with col_prog2:
-            st.markdown('<div class="progress-container">', unsafe_allow_html=True)
-            st.markdown("### 📊 Progresso do Scraping")
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
-            # Placeholder para logs
-            log_container = st.empty()
-            st.markdown('</div>', unsafe_allow_html=True)
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    log_container = st.empty()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     try:
         # Inicializar scraper
@@ -289,49 +314,13 @@ def mostrar_resultados():
     """Mostra os resultados do scraping"""
     
     if st.session_state.scraping_status == "concluido":
-        # Centralizar mensagem de sucesso
-        col_msg1, col_msg2, col_msg3 = st.columns([1, 2, 1])
-        with col_msg2:
-            st.success("✅ Scraping concluído com sucesso!")
+        # Container de resultados
+        st.markdown('<div class="results-container">', unsafe_allow_html=True)
         
-        # Mostrar estatísticas de duplicatas
-        if 'estatisticas_duplicatas' in st.session_state:
-            st.header("🔄 Estatísticas de Duplicatas")
-            
-            col_dup1, col_dup2, col_dup3, col_dup4 = st.columns(4)
-            
-            with col_dup1:
-                st.metric(
-                    "🏠 Imóveis Únicos",
-                    st.session_state.estatisticas_duplicatas.get('imoveis_unicos', 0)
-                )
-            
-            with col_dup2:
-                st.metric(
-                    "🔄 Duplicatas Detectadas",
-                    st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0)
-                )
-            
-            with col_dup3:
-                taxa_dup = st.session_state.estatisticas_duplicatas.get('taxa_duplicatas', 0)
-                st.metric(
-                    "📈 Taxa de Duplicatas",
-                    f"{taxa_dup:.1f}%"
-                )
-            
-            with col_dup4:
-                st.metric(
-                    "📋 Total Processado",
-                    st.session_state.estatisticas_duplicatas.get('total_processados', 0)
-                )
-            
-            # Mensagem informativa sobre duplicatas
-            if st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0) > 0:
-                st.success(f"✅ Sistema de detecção de duplicatas funcionando! {st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0)} duplicatas foram automaticamente removidas.")
-            else:
-                st.info("ℹ️ Nenhuma duplicata detectada nesta execução.")
+        # Mensagem de sucesso centralizada
+        st.success("✅ Scraping concluído com sucesso!")
         
-        # Mostrar estatísticas principais
+        # Resumo principal
         st.header("📊 Resumo dos Dados Coletados")
         
         col1, col2, col3, col4 = st.columns(4)
@@ -363,100 +352,112 @@ def mostrar_resultados():
                 f"{coef_var:.2%}"
             )
         
-        # Mostrar dados em tabela
-        st.header("📋 Dados Coletados")
+        # # Estatísticas de duplicatas (se disponível)
+        # if 'estatisticas_duplicatas' in st.session_state:
+        #     st.subheader("🔄 Duplicatas Detectadas")
+            
+        #     col_dup1, col_dup2 = st.columns(2)
+            
+        #     with col_dup1:
+        #         st.metric(
+        #             "🔄 Duplicatas Removidas",
+        #             st.session_state.estatisticas_duplicatas.get('duplicatas_detectadas', 0)
+        #         )
+            
+        #     with col_dup2:
+        #         taxa_dup = st.session_state.estatisticas_duplicatas.get('taxa_duplicatas', 0)
+        #         st.metric(
+        #             "📈 Taxa de Duplicatas",
+        #             f"{taxa_dup:.1f}%"
+        #         )
+        
+        # Mostrar Top 10 imóveis
+        st.header("🏆 Top 10 Melhores Imóveis")
+        st.markdown("*Os melhores imóveis por preço por m² (menor valor)*")
         
         df = st.session_state.dados_coletados
         
-        # Filtros
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if 'Localidade' in df.columns:
-                localidades = ['Todas'] + list(df['Localidade'].unique())
-                localidade_selecionada = st.selectbox("Filtrar por localidade:", localidades)
-                if localidade_selecionada != 'Todas':
-                    df = df[df['Localidade'] == localidade_selecionada]
-        
-        with col2:
-            if 'Quartos' in df.columns:
-                quartos = ['Todos'] + sorted(df['Quartos'].dropna().unique().astype(int))
-                quartos_selecionados = st.selectbox("Filtrar por quartos:", quartos)
-                if quartos_selecionados != 'Todos':
-                    df = df[df['Quartos'] == quartos_selecionados]
-        
-        with col3:
-            if 'Preco' in df.columns:
-                preco_min = float(df['Preco'].min())
-                preco_max = float(df['Preco'].max())
-                preco_range = st.slider(
-                    "Faixa de preço:",
-                    preco_min, preco_max, (preco_min, preco_max),
-                    format="R$ %.0f"
-                )
-                df = df[(df['Preco'] >= preco_range[0]) & (df['Preco'] <= preco_range[1])]
-        
-        # Mostrar tabela
-        st.dataframe(df, use_container_width=True)
-        
-        # Gráficos
-        if len(df) > 0:
-            st.header("📈 Visualizações")
+        # Criar Top 10 baseado no preço por m² (menor valor = melhor)
+        if 'R$/M2' in df.columns:
+            df_top10 = df.sort_values('R$/M2').head(10)
             
-            col1, col2 = st.columns(2)
+            # Selecionar apenas as colunas mais importantes para exibição
+            colunas_importantes = []
+            
+            # Ordem de prioridade das colunas
+            colunas_prioridade = [
+                'Endereco', 'Localidade', 'Preco', 'M2', 'R$/M2', 
+                'Quartos', 'Banheiros', 'Tipo', 'Condominio'
+            ]
+            
+            for coluna in colunas_prioridade:
+                if coluna in df_top10.columns:
+                    colunas_importantes.append(coluna)
+            
+            # Mostrar apenas as colunas importantes
+            df_exibicao = df_top10[colunas_importantes] if colunas_importantes else df_top10
+            
+            # Formatar valores monetários para melhor visualização
+            if 'Preco' in df_exibicao.columns:
+                df_exibicao = df_exibicao.copy()
+                df_exibicao['Preco'] = df_exibicao['Preco'].apply(lambda x: f"R$ {x:,.0f}" if pd.notna(x) else x)
+            
+            if 'R$/M2' in df_exibicao.columns:
+                df_exibicao = df_exibicao.copy()
+                df_exibicao['R$/M2'] = df_exibicao['R$/M2'].apply(lambda x: f"R$ {x:,.2f}" if pd.notna(x) else x)
+            
+            st.dataframe(df_exibicao, use_container_width=True)
+            
+            # Mostrar estatísticas do Top 10
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                # Histograma de preço por m²
-                if 'R$/M2' in df.columns:
-                    fig_hist = px.histogram(
-                        df, x='R$/M2', 
-                        title='Distribuição de Preços por m²',
-                        labels={'R$/M2': 'Preço por m² (R$)', 'count': 'Quantidade'},
-                        color_discrete_sequence=['#667eea']
-                    )
-                    fig_hist.update_layout(showlegend=False)
-                    st.plotly_chart(fig_hist, use_container_width=True)
+                preco_medio_top10 = df_top10['R$/M2'].mean()
+                st.metric(
+                    "💰 Preço Médio Top 10",
+                    f"R$ {preco_medio_top10:,.2f}/m²"
+                )
             
             with col2:
-                # Boxplot de preço por m²
-                if 'R$/M2' in df.columns:
-                    fig_box = go.Figure()
-                    fig_box.add_trace(go.Box(
-                        y=df['R$/M2'],
-                        name='Preço por m²',
-                        marker_color='#764ba2'
-                    ))
-                    fig_box.update_layout(
-                        title='Boxplot de Preços por m²',
-                        yaxis_title='Preço por m² (R$)'
-                    )
-                    st.plotly_chart(fig_box, use_container_width=True)
-            
-            # Scatter plot: Área vs Preço
-            if 'M2' in df.columns and 'Preco' in df.columns:
-                fig_scatter = px.scatter(
-                    df, x='M2', y='Preco',
-                    title='Área vs Preço dos Imóveis',
-                    labels={'M2': 'Área (m²)', 'Preco': 'Preço (R$)'},
-                    color='R$/M2' if 'R$/M2' in df.columns else None,
-                    color_continuous_scale='Viridis'
+                area_media_top10 = df_top10['M2'].mean() if 'M2' in df_top10.columns else 0
+                st.metric(
+                    "📐 Área Média Top 10",
+                    f"{area_media_top10:,.0f} m²"
                 )
-                st.plotly_chart(fig_scatter, use_container_width=True)
-        
-        # Informações sobre Excel
-        excel_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.xlsx')]
-        if excel_files:
-            st.info("""
-            📊 **Arquivo Excel Gerado!** 
             
-            O arquivo Excel contém **6 abas** com análises detalhadas:
-            - 📋 **Dados Completos**: Todos os imóveis coletados
-            - 📈 **Resumo Estatístico**: Métricas gerais
-            - 💰 **Análise de Preços**: Distribuição por faixas
-            - 🏠 **Análise de Áreas**: Distribuição por faixas
-            - 🏆 **Top Imóveis**: Melhores preços por m²
-            - 🔍 **Filtros Especiais**: Imóveis com características específicas
-            """)
+            with col3:
+                preco_total_medio = df_top10['Preco'].mean() if 'Preco' in df_top10.columns else 0
+                st.metric(
+                    "🏠 Preço Total Médio",
+                    f"R$ {preco_total_medio:,.0f}"
+                )
+        else:
+            st.warning("⚠️ Não foi possível calcular o Top 10 - coluna 'R$/M2' não encontrada")
+            st.dataframe(df.head(10), use_container_width=True)
+        
+        # Gráfico dos Top 10
+        if len(df) > 0 and 'R$/M2' in df.columns:
+            st.header("📈 Top 10 - Preços por m²")
+            
+            df_top10 = df.sort_values('R$/M2').head(10)
+            
+            # Criar gráfico de barras para os Top 10
+            fig_bar = px.bar(
+                df_top10, 
+                x='R$/M2', 
+                y='Endereco' if 'Endereco' in df_top10.columns else 'Localidade',
+                title='Top 10 Melhores Preços por m²',
+                labels={'R$/M2': 'Preço por m² (R$)', 'Endereco': 'Endereço', 'Localidade': 'Localidade'},
+                color='R$/M2',
+                color_continuous_scale='Blues_r',  # Escala invertida (azul mais escuro = menor preço)
+                orientation='h'
+            )
+            fig_bar.update_layout(
+                showlegend=False,
+                height=400,
+                yaxis={'categoryorder':'total ascending'}  # Ordenar por valor
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
         
         # Download de arquivos
         st.header("💾 Download dos Arquivos")
@@ -464,13 +465,12 @@ def mostrar_resultados():
         col_download1, col_download2 = st.columns(2)
         
         with col_download1:
-            st.subheader("📄 Arquivo CSV")
             csv_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.csv')]
             for arquivo in csv_files:
                 if os.path.exists(arquivo):
                     with open(arquivo, 'rb') as f:
                         st.download_button(
-                            label=f"📥 Baixar CSV: {arquivo}",
+                            label=f"📥 Baixar CSV",
                             data=f.read(),
                             file_name=arquivo,
                             mime="text/csv",
@@ -478,52 +478,19 @@ def mostrar_resultados():
                         )
         
         with col_download2:
-            st.subheader("📊 Arquivo Excel")
             excel_files = [f for f in st.session_state.arquivos_gerados if f.endswith('.xlsx')]
             for arquivo in excel_files:
                 if os.path.exists(arquivo):
                     with open(arquivo, 'rb') as f:
                         st.download_button(
-                            label=f"📥 Baixar Excel: {arquivo}",
+                            label=f"📥 Baixar Excel",
                             data=f.read(),
                             file_name=arquivo,
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             use_container_width=True
                         )
-            
-            if not excel_files:
-                st.info("💡 Ative a opção 'Gerar Excel formatado' na sidebar para criar arquivos Excel")
         
-        # Estatísticas detalhadas
-        st.header("📊 Estatísticas Detalhadas")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("💰 Preço por m²")
-            stats_data = {
-                'Métrica': ['Média Aritmética', 'Média Ponderada', 'Mediana', 'Moda', 'Coef. Variação'],
-                'Valor': [
-                    f"R$ {st.session_state.estatisticas.get('media_aritmetica', 0):,.2f}",
-                    f"R$ {st.session_state.estatisticas.get('media_ponderada', 0):,.2f}",
-                    f"R$ {st.session_state.estatisticas.get('mediana', 0):,.2f}",
-                    f"R$ {st.session_state.estatisticas.get('moda', 0):,.2f}",
-                    f"{st.session_state.estatisticas.get('coef_variacao', 0):.2%}"
-                ]
-            }
-            st.table(pd.DataFrame(stats_data))
-        
-        with col2:
-            st.subheader("🏠 Resumo Geral")
-            resumo_data = {
-                'Item': ['Total de Imóveis', 'Preço Médio Total', 'Área Média'],
-                'Valor': [
-                    f"{st.session_state.estatisticas.get('total_linhas', 0)}",
-                    f"R$ {st.session_state.estatisticas.get('preco_medio', 0):,.2f}",
-                    f"{st.session_state.estatisticas.get('area_media', 0):,.0f} m²"
-                ]
-            }
-            st.table(pd.DataFrame(resumo_data))
+        st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
