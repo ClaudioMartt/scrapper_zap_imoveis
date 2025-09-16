@@ -21,9 +21,68 @@ class ZapScraper:
         self.data_list = []
         self.debug = True  # Ativar debug para análise
     
+    def verificar_chrome_instalado(self):
+        """Verifica se o Chrome está instalado no sistema"""
+        try:
+            chrome_paths = [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                r"C:\Users\{}\AppData\Local\Google\Chrome\Application\chrome.exe".format(os.getenv('USERNAME', ''))
+            ]
+            
+            for path in chrome_paths:
+                if os.path.exists(path):
+                    print(f"Chrome encontrado em: {path}")
+                    return True
+            
+            print("Chrome não encontrado. Por favor, instale o Google Chrome.")
+            return False
+        except Exception as e:
+            print(f"Erro ao verificar Chrome: {e}")
+            return False
+    
+    def _criar_driver_com_opcoes(self, version_main=None):
+        """Cria um novo driver com opções frescas para evitar reutilização"""
+        options = uc.ChromeOptions()
+        ua = UserAgent()
+        user_agent = ua.random
+        options.add_argument(f'user-agent={user_agent}')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-notifications')
+        options.add_argument('--disable-popup-blocking')
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--disable-web-security')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        options.add_argument('--remote-debugging-port=9222')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-plugins')
+        options.add_argument('--disable-images')
+        options.add_argument('--disable-javascript')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        # Configurações adicionais para evitar crashes
+        options.add_argument('--disable-background-timer-throttling')
+        options.add_argument('--disable-backgrounding-occluded-windows')
+        options.add_argument('--disable-renderer-backgrounding')
+        options.add_argument('--disable-features=TranslateUI')
+        options.add_argument('--disable-ipc-flooding-protection')
+        
+        if version_main is not None:
+            return uc.Chrome(options=options, version_main=version_main)
+        else:
+            return uc.Chrome(options=options)
+
     def configure_driver(self):
         """Configura o driver do Chrome com opções para evitar detecção"""
         try:
+            # Verificar se o Chrome está instalado
+            if not self.verificar_chrome_instalado():
+                return False
+            
+            # Configuração simples e robusta
             options = uc.ChromeOptions()
             ua = UserAgent()
             user_agent = ua.random
@@ -35,13 +94,29 @@ class ZapScraper:
             options.add_argument('--disable-popup-blocking')
             options.add_argument('--disable-blink-features=AutomationControlled')
             
-            self.driver = uc.Chrome(options=options)
-            
-            width = random.randint(1050, 1200)
-            height = random.randint(800, 960)
-            self.driver.set_window_size(width, height)
-            
-            return True
+            # Tentar criar o driver
+            try:
+                print("Tentando criar driver...")
+                self.driver = uc.Chrome(options=options)
+                print("Driver criado com sucesso!")
+                
+                # Configurar timeout e outras propriedades
+                self.driver.set_page_load_timeout(30)
+                self.driver.implicitly_wait(10)
+                
+                width = random.randint(1050, 1200)
+                height = random.randint(800, 960)
+                self.driver.set_window_size(width, height)
+                
+                # Executar script para ocultar automação
+                self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+                
+                return True
+                
+            except Exception as e:
+                print(f"Erro ao criar driver: {e}")
+                return False
+                
         except Exception as e:
             print(f"Erro ao configurar o driver: {e}")
             return False
@@ -63,7 +138,7 @@ class ZapScraper:
         except Exception as e:
             print(f"Erro nas ações aleatórias: {e}")
     
-    def verificar_carregamento_completo(self, timeout=20):
+    def verificar_carregamento_completo(self, timeout=15):
         """Verifica se a página carregou completamente"""
         print("\nVerificando carregamento completo...")
         last_count = 0
@@ -71,7 +146,6 @@ class ZapScraper:
         start_time = time.time()
         
         while time.time() - start_time < timeout:
-            # Usar o seletor original que funcionava
             elementos = self.driver.find_elements(By.CLASS_NAME, "flex.flex-col.grow.min-w-0")
             current_count = len(elementos)
             print(f"\rElementos encontrados: {current_count}", end="")
@@ -94,28 +168,17 @@ class ZapScraper:
     def scroll_page(self):
         """Faz scroll na página para carregar todos os elementos"""
         try:
-            last_height = self.driver.execute_script("return document.body.scrollHeight")
-            current_position = 0
-            scroll_step = 300  # Voltar ao valor original
+            print("Iniciando scroll da página...")
             
-            while current_position < last_height:
-                current_position = min(current_position + scroll_step, last_height)
-                self.driver.execute_script(f"window.scrollTo(0, {current_position});")
-                time.sleep(random.uniform(0.2, 0.35))  # Voltar ao tempo original
-                
-                if random.random() < 0.2:
-                    self.add_random_actions()
-                
-                new_height = self.driver.execute_script("return document.body.scrollHeight")
-                if new_height > last_height:
-                    last_height = new_height
-                
-                if current_position >= last_height:
-                    print("\nFim da página atingido. Aguardando carregamento final...")
-                    time.sleep(2)  # Voltar ao tempo original
-                    return self.verificar_carregamento_completo()
+            # Scroll simples e eficaz
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(3)
             
-            return self.verificar_carregamento_completo()
+            # Verificar quantos elementos temos agora
+            elementos = self.driver.find_elements(By.CLASS_NAME, "flex.flex-col.grow.min-w-0")
+            print(f"Elementos encontrados após scroll: {len(elementos)}")
+            
+            return len(elementos)
             
         except Exception as e:
             print(f"Erro durante a rolagem: {e}")
@@ -227,21 +290,25 @@ class ZapScraper:
             if not self.configure_driver():
                 return None
                 
+            print("Driver configurado com sucesso!")
             self.driver.get(url)
-            time.sleep(3)
+            time.sleep(5)  # Aumentar tempo de espera inicial
             
             while pagina_atual <= max_paginas:
                 try:
+                    # Verificar se o driver ainda está ativo
                     self.driver.current_url
-                except:
-                    print("\nNavegador foi fechado. Salvando dados...")
+                except Exception as e:
+                    print(f"\nNavegador foi fechado ou perdeu conexão: {e}")
+                    print("Salvando dados coletados até agora...")
                     return self.salvar_dados()
                     
                 print(f"\nProcessando página {pagina_atual}")
+                print("Para parar: feche o navegador")
                 
                 try:
-                    # Aguardar carregamento inicial - voltar ao seletor original
-                    WebDriverWait(self.driver, 15).until(
+                    # Aguardar carregamento da página com timeout maior
+                    WebDriverWait(self.driver, 20).until(
                         EC.presence_of_element_located((By.CLASS_NAME, "flex.flex-col.grow.min-w-0"))
                     )
                     
@@ -254,13 +321,10 @@ class ZapScraper:
                         
                     print(f"\nIniciando extração de {num_elementos} elementos...")
                     
-                    # Voltar ao seletor original que funcionava
                     elementos = self.driver.find_elements(By.CLASS_NAME, "flex.flex-col.grow.min-w-0")
-                    print(f"Encontrados {len(elementos)} elementos para processar")
-                    
                     for idx, elemento in enumerate(elementos, 1):
                         try:
-                            print(f"\rProcessando elemento {idx}/{len(elementos)}", end="")
+                            print(f"\rProcessando elemento {idx}/{num_elementos}", end="")
                             html_content = elemento.get_attribute('outerHTML')
                             soup = BeautifulSoup(html_content, 'html.parser')
                             dados = self.extrair_dados_anuncio(soup)
@@ -273,8 +337,23 @@ class ZapScraper:
                     
                     print(f"\nTotal de dados coletados até agora: {len(self.data_list)}")
                     
+                    # Tentar encontrar botão de próxima página com múltiplos seletores
+                    next_button = None
                     try:
+                        # Primeira tentativa: seletor original
                         next_button = self.driver.find_element(By.CSS_SELECTOR, 'button[data-testid="next-page"]')
+                    except:
+                        try:
+                            # Segunda tentativa: seletor alternativo
+                            next_button = self.driver.find_element(By.CSS_SELECTOR, 'button[aria-label*="próxima"]')
+                        except:
+                            try:
+                                # Terceira tentativa: procurar por texto
+                                next_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Próxima') or contains(text(), 'Next')]")
+                            except:
+                                pass
+                    
+                    if next_button:
                         if not (next_button.is_enabled() and "disabled" not in next_button.get_attribute("class")):
                             print("\nNão há mais páginas para processar")
                             break
@@ -284,14 +363,20 @@ class ZapScraper:
                         next_button.click()
                         time.sleep(random.uniform(4, 6))
                         pagina_atual += 1
-                        
-                    except Exception as e:
-                        print(f"\nErro ao processar próxima página: {e}")
+                    else:
+                        print("\nBotão de próxima página não encontrado. Finalizando extração.")
                         break
-                    
+                        
                 except Exception as e:
-                    print(f"\nErro ao processar página: {e}")
-                    break
+                    print(f"\nErro ao processar página {pagina_atual}: {e}")
+                    # Tentar continuar com a próxima página se possível
+                    if pagina_atual < max_paginas:
+                        print("Tentando continuar com a próxima página...")
+                        pagina_atual += 1
+                        time.sleep(5)
+                        continue
+                    else:
+                        break
         
         except Exception as e:
             print(f"\nErro durante a extração: {e}")
@@ -299,9 +384,10 @@ class ZapScraper:
         finally:
             try:
                 if self.driver:
+                    print("\nFechando navegador...")
                     self.driver.quit()
-            except:
-                pass
+            except Exception as e:
+                print(f"Erro ao fechar navegador: {e}")
         
         return self.salvar_dados()
     
@@ -309,19 +395,21 @@ class ZapScraper:
         """Salva o HTML da página atual para debug"""
         if self.debug and self.driver:
             try:
+                # Verificar se a janela ainda está ativa
+                self.driver.current_url
                 html_content = self.driver.page_source
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(html_content)
                 print(f"HTML salvo em {filename} para debug")
             except Exception as e:
-                print(f"Erro ao salvar HTML: {e}")
+                print(f"Erro ao salvar HTML (janela pode ter sido fechada): {e}")
     
     def salvar_dados(self):
         """Salva os dados coletados em CSV"""
         if self.data_list:
             df = pd.DataFrame(self.data_list)
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            filename = f'dados_zap_{timestamp}.csv'
+            filename = f'dados_parciais_{timestamp}.csv'
             df.to_csv(filename, index=False)
             print(f"\nDados salvos em: {filename}")
             return df
@@ -376,3 +464,57 @@ class ZapScraper:
             if len(df) == len(df_old):
                 break
         return df
+    
+    def analisar_site(self, url_inicial, max_paginas=10):
+        """Método principal para análise completa do site"""
+        try:
+            print("Iniciando extração de dados...")
+            print("Para parar a extração, feche o navegador")
+            
+            df = self.extrair_dados_pagina(url_inicial, max_paginas)
+            if df is not None and not df.empty:
+                print("\nEstatísticas antes da remoção de outliers:")
+                stats = self.calcular_estatisticas(df)
+                self.imprimir_estatisticas(stats)
+                
+                df_cleaned = self.remover_outliers_iterativo(df)
+                
+                print("\nEstatísticas após a remoção de outliers:")
+                stats_cleaned = self.calcular_estatisticas(df_cleaned)
+                self.imprimir_estatisticas(stats_cleaned)
+                
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                filename = f'dados_final_{timestamp}.csv'
+                df_cleaned.to_csv(filename, index=False)
+                print(f"\nDados finais salvos em: {filename}")
+                
+                return df_cleaned
+        except Exception as e:
+            print(f"Erro na análise: {e}")
+        
+        return None
+    
+    def imprimir_estatisticas(self, stats):
+        """Imprime as estatísticas de forma formatada"""
+        if stats:
+            print(f"Média Aritmética: {stats['media_aritmetica']:.2f}".replace('.', ','))
+            print(f"Média Ponderada: {stats['media_ponderada']:.2f}".replace('.', ','))
+            print(f"Mediana: {stats['mediana']:.2f}".replace('.', ','))
+            print(f"Moda: {stats['moda']:.2f}".replace('.', ','))
+            print(f"Coeficiente de Variação: {stats['coef_variacao']:.4f}".replace('.', ','))
+            print(f"Total de Linhas: {stats['total_linhas']}")
+            print(f"Preço Médio: R$ {stats['preco_medio']:.2f}".replace('.', ','))
+            print(f"Área Média: {stats['area_media']:.2f} m²".replace('.', ','))
+
+
+# Função principal para uso direto
+def main():
+    """Função principal para executar o scraper"""
+    url_inicial = input("Digite a URL para análise: ")
+    scraper = ZapScraper()
+    df_resultado = scraper.analisar_site(url_inicial)
+    return df_resultado
+
+
+if __name__ == "__main__":
+    main()

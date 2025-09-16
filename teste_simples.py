@@ -1,102 +1,137 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Script de teste simples para verificar se o scraper está funcionando
+Teste simples do scraper para identificar problemas
 """
 
-from zap_scraper import ZapScraper
+import pandas as pd
+import re
+import numpy as np
 import time
+import random
+import os
+from scipy.stats import zscore
+import warnings
+import undetected_chromedriver as uc
+from fake_useragent import UserAgent
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
 
-def teste_simples():
-    """Teste simples com URL básica"""
+warnings.filterwarnings("ignore")
+
+def teste_basico():
+    """Teste básico do scraper"""
+    print("🧪 Teste básico do scraper...")
     
-    # URL simples de teste
-    url_teste = "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo/?pagina=1"
-    
-    print("🔍 Teste simples do scraper...")
-    print(f"URL: {url_teste}")
-    print("=" * 60)
-    
-    # Criar instância do scraper
-    scraper = ZapScraper()
-    
+    driver = None
     try:
-        print("🚀 Iniciando teste...")
+        # Configuração simples do driver
+        options = uc.ChromeOptions()
+        ua = UserAgent()
+        user_agent = ua.random
+        options.add_argument(f'user-agent={user_agent}')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-notifications')
+        options.add_argument('--disable-popup-blocking')
+        options.add_argument('--disable-blink-features=AutomationControlled')
         
-        # Configurar driver
-        if not scraper.configure_driver():
-            print("❌ Erro ao configurar driver")
-            return
+        print("Criando driver...")
+        driver = uc.Chrome(options=options)
+        print("✅ Driver criado com sucesso!")
         
-        print("✅ Driver configurado")
+        # Configurar timeout
+        driver.set_page_load_timeout(30)
+        driver.implicitly_wait(10)
         
-        # Acessar página
-        scraper.driver.get(url_teste)
+        # Definir tamanho da janela
+        driver.set_window_size(1200, 800)
+        
+        # URL de teste
+        url = "https://www.zapimoveis.com.br/venda/apartamentos/sp+sao-paulo/"
+        print(f"🌐 Acessando: {url}")
+        
+        driver.get(url)
         time.sleep(5)
         
-        print("✅ Página acessada")
+        print("🔍 Procurando elementos...")
         
-        # Aguardar elementos
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        
+        # Aguardar carregamento
         try:
-            WebDriverWait(scraper.driver, 15).until(
+            WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "flex.flex-col.grow.min-w-0"))
             )
-            print("✅ Elementos detectados")
-        except:
-            print("⚠️ Timeout aguardando elementos")
+            print("✅ Elementos carregados!")
+        except Exception as e:
+            print(f"❌ Erro ao aguardar elementos: {e}")
+            return False
         
-        # Fazer scroll
-        print("\n📜 Fazendo scroll...")
-        num_elementos = scraper.scroll_page()
-        print(f"✅ Scroll concluído. Elementos: {num_elementos}")
+        # Fazer scroll simples
+        print("📜 Fazendo scroll...")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(3)
         
-        # Encontrar elementos
-        elementos = scraper.driver.find_elements(By.CLASS_NAME, "flex.flex-col.grow.min-w-0")
-        print(f"✅ Elementos encontrados para processar: {len(elementos)}")
+        # Procurar elementos
+        elementos = driver.find_elements(By.CLASS_NAME, "flex.flex-col.grow.min-w-0")
+        print(f"📊 Encontrados {len(elementos)} elementos")
         
-        # Processar alguns elementos
-        if elementos:
-            print(f"\n📊 Processando primeiros {min(3, len(elementos))} elementos...")
+        if len(elementos) > 0:
+            print("✅ Sucesso! Elementos encontrados")
             
-            for i, elemento in enumerate(elementos[:3]):
-                try:
-                    from bs4 import BeautifulSoup
-                    html_content = elemento.get_attribute('outerHTML')
-                    soup = BeautifulSoup(html_content, 'html.parser')
-                    dados = scraper.extrair_dados_anuncio(soup)
-                    
-                    if dados:
-                        print(f"✅ Elemento {i+1}: {dados.get('Localidade', 'N/A')} - R$ {dados.get('Preco', 'N/A')}")
-                        scraper.data_list.append(dados)
-                    else:
-                        print(f"⚠️ Elemento {i+1}: Não retornou dados")
-                except Exception as e:
-                    print(f"❌ Elemento {i+1}: Erro - {e}")
-        
-        print(f"\n📋 Total de dados coletados: {len(scraper.data_list)}")
-        
-        if scraper.data_list:
-            # Salvar dados
-            import pandas as pd
-            df = pd.DataFrame(scraper.data_list)
-            df.to_csv("teste_simples.csv", index=False)
-            print("💾 Dados salvos em 'teste_simples.csv'")
+            # Testar extração de dados do primeiro elemento
+            try:
+                primeiro_elemento = elementos[0]
+                html_content = primeiro_elemento.get_attribute('outerHTML')
+                soup = BeautifulSoup(html_content, 'html.parser')
+                
+                # Procurar preço
+                preco_element = soup.find("p", class_="text-2-25 text-feedback-success-110 font-semibold")
+                if not preco_element:
+                    preco_element = soup.find("p", class_="text-2-25 text-neutral-120 font-semibold")
+                
+                if preco_element:
+                    preco_texto = preco_element.text.strip()
+                    print(f"💰 Preço encontrado: {preco_texto}")
+                else:
+                    print("❌ Preço não encontrado")
+                
+                # Procurar localização
+                localizacao_element = soup.find("h2", {"data-cy": "rp-cardProperty-location-txt"})
+                if localizacao_element:
+                    localizacao = localizacao_element.text.strip()
+                    print(f"📍 Localização: {localizacao}")
+                else:
+                    print("❌ Localização não encontrada")
+                
+                return True
+                
+            except Exception as e:
+                print(f"❌ Erro ao extrair dados: {e}")
+                return False
+        else:
+            print("❌ Nenhum elemento encontrado")
+            return False
             
-            # Mostrar resumo
-            print("\n📊 Resumo dos dados:")
-            print(df.to_string())
-        
     except Exception as e:
-        print(f"❌ Erro durante o teste: {e}")
+        print(f"❌ Erro geral: {e}")
+        return False
         
     finally:
-        try:
-            if scraper.driver:
-                scraper.driver.quit()
-        except:
-            pass
+        if driver:
+            try:
+                driver.quit()
+                print("🔒 Driver fechado")
+            except:
+                pass
 
 if __name__ == "__main__":
-    teste_simples()
+    sucesso = teste_basico()
+    if sucesso:
+        print("\n🎉 Teste básico passou!")
+        print("💡 O problema pode estar na lógica de scroll ou extração de dados")
+    else:
+        print("\n⚠️ Teste básico falhou")
+        print("💡 Verifique se o Chrome está instalado e atualizado")
