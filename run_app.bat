@@ -1,0 +1,9 @@
+@echo off
+echo 🏠 Iniciando Zap Imóveis Scraper...
+echo.
+echo Verificando dependências...
+pip install -r requirements.txt
+echo.
+echo Iniciando aplicação Streamlit...
+streamlit run app.py
+pause
