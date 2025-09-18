@@ -98,7 +98,13 @@ def testar_url_especifica():
             print(dados.to_string())
             
             # Salvar dados
-            dados.to_csv("teste_url_especifica.csv", index=False)
+            # Criar pasta arquivos se não existir
+            pasta_arquivos = "arquivos"
+            if not os.path.exists(pasta_arquivos):
+                os.makedirs(pasta_arquivos)
+            
+            caminho_csv = os.path.join(pasta_arquivos, "teste_url_especifica.csv")
+            dados.to_csv(caminho_csv, index=False)
             print("\n💾 Dados salvos em 'teste_url_especifica.csv'")
         else:
             print("❌ Nenhum dado foi extraído")

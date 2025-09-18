@@ -492,11 +492,17 @@ class ZapScraper:
     def salvar_dados(self):
         """Salva os dados coletados em CSV"""
         if self.data_list:
+            # Criar pasta arquivos se não existir
+            pasta_arquivos = "arquivos"
+            if not os.path.exists(pasta_arquivos):
+                os.makedirs(pasta_arquivos)
+            
             df = pd.DataFrame(self.data_list)
             timestamp = time.strftime("%Y%m%d-%H%M%S")
             filename = f'dados_parciais_{timestamp}.csv'
-            df.to_csv(filename, index=False)
-            print(f"\nDados salvos em: {filename}")
+            caminho_csv = os.path.join(pasta_arquivos, filename)
+            df.to_csv(caminho_csv, index=False)
+            print(f"\nDados salvos em: {caminho_csv}")
             return df
         return None
     
@@ -576,10 +582,16 @@ class ZapScraper:
                 stats_cleaned = self.calcular_estatisticas(df_cleaned)
                 self.imprimir_estatisticas(stats_cleaned)
                 
+                # Criar pasta arquivos se não existir
+                pasta_arquivos = "arquivos"
+                if not os.path.exists(pasta_arquivos):
+                    os.makedirs(pasta_arquivos)
+                
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
                 filename = f'dados_final_{timestamp}.csv'
-                df_cleaned.to_csv(filename, index=False)
-                print(f"\nDados finais salvos em: {filename}")
+                caminho_csv = os.path.join(pasta_arquivos, filename)
+                df_cleaned.to_csv(caminho_csv, index=False)
+                print(f"\nDados finais salvos em: {caminho_csv}")
                 
                 # Gerar Excel formatado automaticamente
                 print("\n🔄 Gerando arquivo Excel formatado automaticamente...")

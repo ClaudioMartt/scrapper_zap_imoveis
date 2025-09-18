@@ -332,8 +332,13 @@ class ExcelFormatter:
     def gerar_excel_formatado(self, df, nome_arquivo=None):
         """Gera arquivo Excel formatado com todas as abas"""
         if nome_arquivo is None:
+            # Criar pasta arquivos se não existir
+            pasta_arquivos = "arquivos"
+            if not os.path.exists(pasta_arquivos):
+                os.makedirs(pasta_arquivos)
+            
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            nome_arquivo = f'dados_zap_formatado_{timestamp}.xlsx'
+            nome_arquivo = os.path.join(pasta_arquivos, f'dados_zap_formatado_{timestamp}.xlsx')
         
         try:
             # Criar todas as abas

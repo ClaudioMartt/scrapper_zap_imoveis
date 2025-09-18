@@ -15,6 +15,14 @@ warnings.filterwarnings("ignore")
 from zap_scraper import ZapScraper
 from excel_formatter import ExcelFormatter
 
+def criar_pasta_arquivos():
+    """Cria a pasta 'arquivos' se ela não existir"""
+    pasta_arquivos = "arquivos"
+    if not os.path.exists(pasta_arquivos):
+        os.makedirs(pasta_arquivos)
+        print(f"📁 Pasta '{pasta_arquivos}' criada com sucesso!")
+    return pasta_arquivos
+
 # Configuração da página
 st.set_page_config(
     page_title="Zap Imóveis Scraper",
@@ -268,11 +276,13 @@ def executar_scraping(url):
             stats_duplicatas = scraper.obter_estatisticas_duplicatas()
             st.session_state.estatisticas_duplicatas = stats_duplicatas
             
-            # Salvar arquivos CSV
+            # Criar pasta arquivos e salvar CSV
+            pasta_arquivos = criar_pasta_arquivos()
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             filename_csv = f'dados_zap_{timestamp}.csv'
-            df.to_csv(filename_csv, index=False)
-            st.session_state.arquivos_gerados.append(filename_csv)
+            caminho_csv = os.path.join(pasta_arquivos, filename_csv)
+            df.to_csv(caminho_csv, index=False)
+            st.session_state.arquivos_gerados.append(caminho_csv)
             
             # Gerar Excel se solicitado
             if gerar_excel:
@@ -283,7 +293,8 @@ def executar_scraping(url):
                 try:
                     excel_formatter = ExcelFormatter()
                     filename_excel = f'dados_zap_formatado_{timestamp}.xlsx'
-                    excel_file = excel_formatter.gerar_excel_formatado(df, filename_excel)
+                    caminho_excel = os.path.join(pasta_arquivos, filename_excel)
+                    excel_file = excel_formatter.gerar_excel_formatado(df, caminho_excel)
                     
                     if excel_file:
                         st.session_state.arquivos_gerados.append(excel_file)

@@ -31,7 +31,13 @@ print(df)
 
 # Criar Excel
 formatter = ExcelFormatter()
-excel_file = formatter.gerar_excel_formatado(df, 'teste_alinhamento.xlsx')
+# Criar pasta arquivos se não existir
+pasta_arquivos = "arquivos"
+if not os.path.exists(pasta_arquivos):
+    os.makedirs(pasta_arquivos)
+
+caminho_excel = os.path.join(pasta_arquivos, 'teste_alinhamento.xlsx')
+excel_file = formatter.gerar_excel_formatado(df, caminho_excel)
 
 if excel_file:
     print(f"\n✅ Excel criado: {excel_file}")

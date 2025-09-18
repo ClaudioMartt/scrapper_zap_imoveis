@@ -1,0 +1,300 @@
+================================================================================
+🏠 ZAP IMÓVEIS SCRAPER - GUIA COMPLETO DE INSTALAÇÃO
+================================================================================
+
+Este arquivo contém TODOS os requisitos necessários para instalar e executar
+o projeto Zap Imóveis Scraper em uma máquina Windows nova.
+
+================================================================================
+📋 REQUISITOS DO SISTEMA OPERACIONAL (WINDOWS)
+================================================================================
+
+1. SISTEMA OPERACIONAL:
+   - Windows 10 ou superior (recomendado Windows 10/11)
+   - Arquitetura: 64-bit (x64)
+
+2. NAVEGADOR WEB:
+   - Google Chrome (OBRIGATÓRIO)
+   - Versão mais recente recomendada
+   - Download: https://www.google.com/chrome/
+
+3. CONEXÃO COM INTERNET:
+   - Conexão estável com internet
+   - Velocidade mínima recomendada: 10 Mbps
+
+================================================================================
+🐍 REQUISITOS DO PYTHON
+================================================================================
+
+1. PYTHON:
+   - Versão: Python 3.8 ou superior (recomendado Python 3.9+)
+   - Download: https://www.python.org/downloads/
+   - IMPORTANTE: Marcar "Add Python to PATH" durante a instalação
+
+2. PIP (Gerenciador de Pacotes):
+   - Geralmente vem instalado com o Python
+   - Versão mais recente recomendada
+
+3. VERIFICAÇÃO DA INSTALAÇÃO:
+   Abra o Prompt de Comando (cmd) e execute:
+   ```
+   python --version
+   pip --version
+   ```
+
+================================================================================
+📦 DEPENDÊNCIAS DO PROJETO (requirements.txt)
+================================================================================
+
+Execute o seguinte comando para instalar todas as dependências:
+
+```
+pip install -r requirements.txt
+```
+
+OU instale manualmente cada pacote:
+
+1. pandas>=1.5.0
+   - Manipulação e análise de dados
+   - Comando: pip install pandas>=1.5.0
+
+2. numpy>=1.21.0
+   - Computação numérica
+   - Comando: pip install numpy>=1.21.0
+
+3. scipy>=1.9.0
+   - Análises estatísticas e científicas
+   - Comando: pip install scipy>=1.9.0
+
+4. selenium>=4.0.0
+   - Automação do navegador web
+   - Comando: pip install selenium>=4.0.0
+
+5. undetected-chromedriver>=3.5.0
+   - Driver do Chrome não detectável
+   - Comando: pip install undetected-chromedriver>=3.5.0
+
+6. fake-useragent>=1.4.0
+   - Geração de user agents falsos
+   - Comando: pip install fake-useragent>=1.4.0
+
+7. beautifulsoup4>=4.11.0
+   - Parsing de HTML/XML
+   - Comando: pip install beautifulsoup4>=4.11.0
+
+8. matplotlib>=3.5.0
+   - Criação de gráficos
+   - Comando: pip install matplotlib>=3.5.0
+
+9. seaborn>=0.11.0
+   - Visualização de dados estatísticos
+   - Comando: pip install seaborn>=0.11.0
+
+10. ipython>=8.0.0
+    - Interface interativa do Python
+    - Comando: pip install ipython>=8.0.0
+
+11. jupyter>=1.0.0
+    - Notebooks Jupyter
+    - Comando: pip install jupyter>=1.0.0
+
+12. streamlit>=1.28.0
+    - Framework para aplicações web
+    - Comando: pip install streamlit>=1.28.0
+
+13. plotly>=5.15.0
+    - Gráficos interativos
+    - Comando: pip install plotly>=5.15.0
+
+14. openpyxl>=3.1.0
+    - Manipulação de arquivos Excel
+    - Comando: pip install openpyxl>=3.1.0
+
+================================================================================
+🚀 INSTRUÇÕES DE INSTALAÇÃO PASSO A PASSO
+================================================================================
+
+PASSO 1: INSTALAR PYTHON
+-------------------------
+1. Acesse: https://www.python.org/downloads/
+2. Baixe a versão mais recente do Python (3.9+)
+3. Execute o instalador
+4. IMPORTANTE: Marque "Add Python to PATH"
+5. Clique em "Install Now"
+
+PASSO 2: INSTALAR GOOGLE CHROME
+-------------------------------
+1. Acesse: https://www.google.com/chrome/
+2. Baixe e instale o Google Chrome
+3. Certifique-se de que está atualizado
+
+PASSO 3: BAIXAR O PROJETO
+-------------------------
+1. Copie todos os arquivos do projeto para uma pasta
+2. Exemplo: C:\Users\SeuUsuario\zapImoveis\
+
+PASSO 4: INSTALAR DEPENDÊNCIAS
+------------------------------
+1. Abra o Prompt de Comando (cmd)
+2. Navegue até a pasta do projeto:
+   ```
+   cd C:\Users\SeuUsuario\zapImoveis\
+   ```
+3. Instale as dependências:
+   ```
+   pip install -r requirements.txt
+   ```
+
+PASSO 5: EXECUTAR O PROJETO
+---------------------------
+Opção 1 - Usando o arquivo .bat:
+1. Execute o arquivo: run_app.bat
+
+Opção 2 - Usando o comando direto:
+1. No Prompt de Comando, execute:
+   ```
+   streamlit run app.py
+   ```
+
+================================================================================
+🔧 CONFIGURAÇÕES ADICIONAIS
+================================================================================
+
+1. VARIÁVEIS DE AMBIENTE (se necessário):
+   - Adicione o Python ao PATH do sistema
+   - Verifique se o Chrome está no PATH
+
+2. FIREWALL/ANTIVÍRUS:
+   - Pode ser necessário liberar o Python e Chrome
+   - Adicione exceções se necessário
+
+3. PROXY/CORPORATIVO:
+   - Se estiver em rede corporativa, configure proxy:
+   ```
+   pip install --proxy http://proxy:porta package_name
+   ```
+
+================================================================================
+✅ VERIFICAÇÃO DA INSTALAÇÃO
+================================================================================
+
+Execute os seguintes comandos para verificar se tudo está funcionando:
+
+1. Verificar Python:
+   ```
+   python --version
+   ```
+
+2. Verificar pip:
+   ```
+   pip --version
+   ```
+
+3. Verificar dependências principais:
+   ```
+   python -c "import pandas, numpy, selenium, streamlit; print('Todas as dependências OK!')"
+   ```
+
+4. Testar o Streamlit:
+   ```
+   streamlit hello
+   ```
+
+================================================================================
+🚨 SOLUÇÃO DE PROBLEMAS COMUNS
+================================================================================
+
+PROBLEMA 1: "python não é reconhecido"
+SOLUÇÃO: Reinstalar Python marcando "Add to PATH"
+
+PROBLEMA 2: Erro de permissão no pip
+SOLUÇÃO: Executar cmd como Administrador
+
+PROBLEMA 3: ChromeDriver não encontrado
+SOLUÇÃO: Verificar se o Chrome está instalado e atualizado
+
+PROBLEMA 4: Erro de conexão
+SOLUÇÃO: Verificar firewall e conexão com internet
+
+PROBLEMA 5: Dependências não instalam
+SOLUÇÃO: Atualizar pip: pip install --upgrade pip
+
+PROBLEMA 6: Erro de encoding
+SOLUÇÃO: Configurar encoding UTF-8 no Windows
+
+================================================================================
+📁 ESTRUTURA DO PROJETO
+================================================================================
+
+O projeto deve conter os seguintes arquivos principais:
+
+├── app.py                    # Aplicação principal Streamlit
+├── zap_scraper.py           # Classe do scraper
+├── excel_formatter.py       # Formatador de Excel
+├── requirements.txt         # Dependências do projeto
+├── run_app.bat             # Script para executar no Windows
+├── README.md               # Documentação
+├── arquivos/               # Pasta onde os arquivos são salvos (criada automaticamente)
+│   ├── dados_zap_*.csv     # Arquivos CSV gerados
+│   └── dados_zap_formatado_*.xlsx  # Arquivos Excel gerados
+└── [outros arquivos de teste e exemplo]
+
+================================================================================
+🎯 COMO USAR APÓS INSTALAÇÃO
+================================================================================
+
+1. Execute: streamlit run app.py
+2. Abra o navegador em: http://localhost:8501
+3. Cole uma URL do Zap Imóveis
+4. Clique em "Iniciar Scraping"
+5. Aguarde o processamento
+6. Baixe os arquivos gerados
+
+📁 PASTA ARQUIVOS
+================================================================================
+
+Todos os arquivos CSV e Excel gerados pelo projeto são salvos automaticamente
+na pasta "arquivos" dentro do diretório do projeto:
+
+- A pasta é criada automaticamente na primeira execução
+- Arquivos CSV: dados_zap_YYYYMMDD-HHMMSS.csv
+- Arquivos Excel: dados_zap_formatado_YYYYMMDD-HHMMSS.xlsx
+- Arquivos de teste também são salvos nesta pasta
+
+LOCALIZAÇÃO DOS ARQUIVOS:
+- Windows: C:\Users\SeuUsuario\zapImoveis\arquivos\
+- Os arquivos podem ser baixados diretamente pela interface web
+- Ou acessados diretamente na pasta do projeto
+
+================================================================================
+📞 SUPORTE E CONTATO
+================================================================================
+
+Em caso de problemas:
+1. Verifique se todos os requisitos foram instalados
+2. Consulte a documentação do projeto (README.md)
+3. Verifique se a URL do Zap Imóveis está correta
+4. Certifique-se de que o Chrome está instalado e atualizado
+
+================================================================================
+📝 RESUMO RÁPIDO DE INSTALAÇÃO
+================================================================================
+
+1. Instalar Python 3.9+ (marcar "Add to PATH")
+2. Instalar Google Chrome
+3. Baixar projeto para uma pasta
+4. Abrir cmd na pasta do projeto
+5. Executar: pip install -r requirements.txt
+6. Executar: streamlit run app.py
+7. Acessar: http://localhost:8501
+
+================================================================================
+🎉 INSTALAÇÃO CONCLUÍDA!
+================================================================================
+
+Após seguir todos os passos acima, o projeto Zap Imóveis Scraper estará
+pronto para uso em sua máquina Windows nova.
+
+Data de criação: $(Get-Date -Format "dd/MM/yyyy HH:mm")
+Versão do projeto: 1.0
+Compatível com: Windows 10/11, Python 3.8+

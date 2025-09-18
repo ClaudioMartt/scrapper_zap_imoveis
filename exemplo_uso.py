@@ -39,7 +39,13 @@ def exemplo_basico():
         print(f"Dados após limpeza: {len(df_limpo)} imóveis")
         
         # Salvar dados
-        df_limpo.to_csv('exemplo_dados_limpos.csv', index=False)
+        # Criar pasta arquivos se não existir
+        pasta_arquivos = "arquivos"
+        if not os.path.exists(pasta_arquivos):
+            os.makedirs(pasta_arquivos)
+        
+        caminho_csv = os.path.join(pasta_arquivos, 'exemplo_dados_limpos.csv')
+        df_limpo.to_csv(caminho_csv, index=False)
         print("✅ Dados salvos em 'exemplo_dados_limpos.csv'")
         
     else:
@@ -72,7 +78,8 @@ def exemplo_com_filtros():
             print(f"Imóveis com preço abaixo da média: {len(df_preco_medio)}")
         
         # Salvar dados filtrados
-        df.to_csv('exemplo_dados_filtrados.csv', index=False)
+        caminho_csv = os.path.join(pasta_arquivos, 'exemplo_dados_filtrados.csv')
+        df.to_csv(caminho_csv, index=False)
         print("✅ Dados filtrados salvos em 'exemplo_dados_filtrados.csv'")
 
 if __name__ == "__main__":

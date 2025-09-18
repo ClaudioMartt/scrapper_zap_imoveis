@@ -64,7 +64,13 @@ def testar_excel_corrigido():
     # Criar Excel formatado
     print("\n🔄 Gerando Excel formatado...")
     excel_formatter = ExcelFormatter()
-    excel_file = excel_formatter.gerar_excel_formatado(df_teste, 'teste_correcao_excel.xlsx')
+    # Criar pasta arquivos se não existir
+    pasta_arquivos = "arquivos"
+    if not os.path.exists(pasta_arquivos):
+        os.makedirs(pasta_arquivos)
+    
+    caminho_excel = os.path.join(pasta_arquivos, 'teste_correcao_excel.xlsx')
+    excel_file = excel_formatter.gerar_excel_formatado(df_teste, caminho_excel)
     
     if excel_file:
         print(f"✅ Excel criado: {excel_file}")
