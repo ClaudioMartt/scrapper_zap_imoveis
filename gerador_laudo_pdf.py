@@ -109,7 +109,9 @@ class GeradorLaudoPdf:
             ['Cobertura:', dados_imovel.get('cobertura', 'N/A')]
         ]
         
-        tabela = Table(dados_tabela, colWidths=[3*inch, 4*inch])
+        # Calcular larguras para ocupar toda a página (A4 = 21cm, margens = 4cm, sobra = 17cm)
+        largura_total = 6.7*inch  # 17cm em polegadas
+        tabela = Table(dados_tabela, colWidths=[2.5*inch, 4.2*inch])
         tabela.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), HexColor('#f8f9fa')),
             ('TEXTCOLOR', (0, 0), (0, -1), HexColor('#1f4e79')),
@@ -167,7 +169,8 @@ class GeradorLaudoPdf:
             dados_tabela.append(['', '', '', '', ''])
             dados_tabela.append(['Imóveis descartados:', f'Valores acima de R$ {preco_maximo:,.0f}', '', '', ''])
             
-            tabela = Table(dados_tabela, colWidths=[0.5*inch, 2*inch, 1*inch, 1.5*inch, 1.5*inch])
+            # Ajustar larguras para ocupar toda a largura da página
+            tabela = Table(dados_tabela, colWidths=[0.6*inch, 2.2*inch, 1.2*inch, 1.8*inch, 1.8*inch])
             tabela.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#2e7d32')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), white),
@@ -240,7 +243,8 @@ em razão de apresentarem características construtivas e padrões de acabamento
             ['VALOR TOTAL DO IMÓVEL:', f"R$ {valor_total:,.2f}"]
         ]
         
-        tabela = Table(calculos_tabela, colWidths=[3.5*inch, 2*inch])
+        # Ajustar larguras para ocupar toda a largura da página
+        tabela = Table(calculos_tabela, colWidths=[4.2*inch, 2.5*inch])
         tabela.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, 0), HexColor('#2e7d32')),
             ('BACKGROUND', (0, -1), (0, -1), HexColor('#1f4e79')),
@@ -326,18 +330,15 @@ O custo imobiliário mais baixo e investimentos municipais recentes tornam-no at
         """Adiciona a seção de assinatura"""
         self.story.append(Paragraph("8. ASSINATURA DO AVALIADOR", self.styles['SubtituloLaudo']))
         
-        # Espaço para assinatura
-        self.story.append(Spacer(1, 30))
+        # Espaço reduzido para assinatura
+        self.story.append(Spacer(1, 15))
         
         # Dados do avaliador
         cidade_assinatura = dados_avaliador.get('cidade_assinatura', 'Sorocaba')
         estado_assinatura = dados_avaliador.get('estado_assinatura', 'SP')
         data_laudo = dados_avaliador.get('data_laudo', datetime.now().date())
         
-        assinatura_texto = f"""{cidade_assinatura} - {estado_assinatura}, {data_laudo.strftime('%d de %B de %Y')}
-
-        <br/><br/>
-
+        assinatura_texto = f"""{cidade_assinatura} - {estado_assinatura}, {data_laudo.strftime('%d de %B de %Y')}<br/><br/>
         {dados_avaliador.get('nome', 'Jhonni Balbino da Silva')}<br/>
         Perito Avaliador Imobiliário<br/>
         CRECI: {dados_avaliador.get('creci', '296769-F')} | CNAI: {dados_avaliador.get('cnai', '051453')}<br/>
