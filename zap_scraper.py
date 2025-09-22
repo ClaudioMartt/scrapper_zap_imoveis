@@ -13,6 +13,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from excel_formatter import ExcelFormatter
+from agno.agent import Agent
+from agno.tools.tavily import TavilyTools
+from dotenv import load_dotenv
+
+load_dotenv()
 
 warnings.filterwarnings("ignore")
 
@@ -645,6 +650,10 @@ class ZapScraper:
         except Exception as e:
             print(f"❌ Erro ao gerar Excel: {e}")
             return None
+
+def agno_tavily():
+    agent = Agent(tools=[TavilyTools()])
+    agent.print_response("Search tavily for 'Higienopolis'", markdown=True)
 
 
 # Função principal para uso direto
