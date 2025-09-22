@@ -1,0 +1,35 @@
+# Arquivos de ambiente e configuração
+.env
+.env.local
+.env.*.local
+config_api_keys.py
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Arquivos de dados temporários
+*.csv
+*.xlsx
+*.pdf
+arquivos/
+
+# Arquivos de build e distribuição
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
