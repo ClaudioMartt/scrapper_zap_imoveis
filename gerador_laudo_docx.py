@@ -1,8 +1,11 @@
 from docx import Document
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.shared import OxmlElement, qn
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
 import pandas as pd
 import os
 from datetime import datetime
@@ -22,19 +25,22 @@ class GeradorLaudoDocx:
         titulo_style = self.document.styles.add_style('TituloLaudo', WD_STYLE_TYPE.PARAGRAPH)
         titulo_font = titulo_style.font
         titulo_font.name = 'Arial'
-        titulo_font.size = Pt(16)
+        titulo_font.size = Pt(18)
         titulo_font.bold = True
+        titulo_font.color.rgb = RGBColor(31, 78, 121)  # Azul escuro
         titulo_style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        titulo_style.paragraph_format.space_after = Pt(12)
+        titulo_style.paragraph_format.space_after = Pt(20)
+        titulo_style.paragraph_format.space_before = Pt(10)
         
         # Estilo para subtítulos
         subtitulo_style = self.document.styles.add_style('SubtituloLaudo', WD_STYLE_TYPE.PARAGRAPH)
         subtitulo_font = subtitulo_style.font
         subtitulo_font.name = 'Arial'
-        subtitulo_font.size = Pt(12)
+        subtitulo_font.size = Pt(14)
         subtitulo_font.bold = True
-        subtitulo_style.paragraph_format.space_before = Pt(12)
-        subtitulo_style.paragraph_format.space_after = Pt(6)
+        subtitulo_font.color.rgb = RGBColor(46, 125, 50)  # Verde escuro
+        subtitulo_style.paragraph_format.space_before = Pt(16)
+        subtitulo_style.paragraph_format.space_after = Pt(8)
         
         # Estilo para texto normal
         texto_style = self.document.styles.add_style('TextoLaudo', WD_STYLE_TYPE.PARAGRAPH)
@@ -44,6 +50,43 @@ class GeradorLaudoDocx:
         texto_style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         texto_style.paragraph_format.space_after = Pt(6)
         texto_style.paragraph_format.line_spacing = 1.15
+        
+        # Estilo para assinatura
+        assinatura_style = self.document.styles.add_style('AssinaturaLaudo', WD_STYLE_TYPE.PARAGRAPH)
+        assinatura_font = assinatura_style.font
+        assinatura_font.name = 'Arial'
+        assinatura_font.size = Pt(11)
+        assinatura_style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        assinatura_style.paragraph_format.space_before = Pt(20)
+        assinatura_style.paragraph_format.space_after = Pt(6)
+    
+    def _aplicar_estilo_tabela(self, tabela, cor_fundo=None):
+        """Aplica estilo profissional nas tabelas"""
+        for row_idx, row in enumerate(tabela.rows):
+            for cell_idx, cell in enumerate(row.cells):
+                # Aplicar cor de fundo se especificada
+                if cor_fundo:
+                    shading_elm = parse_xml(r'<w:shd {} w:fill="{:02X}{:02X}{:02X}"/>'.format(
+                        nsdecls('w'), cor_fundo[0], cor_fundo[1], cor_fundo[2]))
+                    cell._tc.get_or_add_tcPr().append(shading_elm)
+                
+                # Aplicar bordas
+                tc = cell._tc
+                tcPr = tc.get_or_add_tcPr()
+                tcBorders = tcPr.first_child_found_in("w:tcBorders")
+                if tcBorders is None:
+                    tcBorders = OxmlElement('w:tcBorders')
+                    tcPr.append(tcBorders)
+                
+                for border_name in ['top', 'left', 'bottom', 'right']:
+                    border = tcBorders.find(qn(f'w:{border_name}'))
+                    if border is None:
+                        border = OxmlElement(f'w:{border_name}')
+                        tcBorders.append(border)
+                    border.set(qn('w:val'), 'single')
+                    border.set(qn('w:sz'), '4')
+                    border.set(qn('w:space'), '0')
+                    border.set(qn('w:color'), 'CCCCCC')
         
     def adicionar_titulo(self, titulo="LAUDO DE AVALIAÇÃO IMOBILIÁRIA"):
         """Adiciona o título principal do laudo"""
@@ -66,14 +109,51 @@ em conformidade com a ABNT NBR 14653-1 (Procedimentos Gerais) e NBR 14653-2 (Im�
         """Adiciona a seção de identificação do imóvel"""
         self.document.add_paragraph("2. IDENTIFICAÇÃO DO IMÓVEL", style='SubtituloLaudo')
         
-        # Montar texto de identificação
-        identificacao_texto = f"""Número da Matrícula: {dados_imovel.get('numero_matricula', 'N/A')}
-Cartório de Registro de Imóveis: {dados_imovel.get('cartorio', 'N/A')}
-Descrição: Terreno com área de {dados_imovel.get('area_terreno', 0):.2f} m², contendo uma edificação residencial em {dados_imovel.get('tipo_construcao', 'alvenaria').lower()}, 
-coberta de {dados_imovel.get('cobertura', 'telhas').lower()}, com área construída de {dados_imovel.get('area_construida', 0):.2f} m². 
-Localizado no loteamento {dados_imovel.get('loteamento', 'N/A')}, na cidade de {dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}."""
+        # Criar tabela para dados do imóvel
+        dados_tabela = [
+            ['Número da Matrícula:', dados_imovel.get('numero_matricula', 'N/A')],
+            ['Cartório de Registro:', dados_imovel.get('cartorio', 'N/A')],
+            ['Endereço Completo:', dados_imovel.get('endereco_completo', 'N/A')],
+            ['Área do Terreno:', f"{dados_imovel.get('area_terreno', 0):.2f} m²"],
+            ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
+            ['Loteamento:', dados_imovel.get('loteamento', 'N/A')],
+            ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
+            ['Tipo de Construção:', dados_imovel.get('tipo_construcao', 'N/A')],
+            ['Cobertura:', dados_imovel.get('cobertura', 'N/A')]
+        ]
         
-        self.document.add_paragraph(identificacao_texto, style='TextoLaudo')
+        tabela = self.document.add_table(rows=len(dados_tabela), cols=2)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # Configurar largura das colunas
+        for row in tabela.rows:
+            row.cells[0].width = Inches(2.5)
+            row.cells[1].width = Inches(4.2)
+        
+        for i, (campo, valor) in enumerate(dados_tabela):
+            # Célula do campo (primeira coluna)
+            cell_campo = tabela.cell(i, 0)
+            cell_campo.text = campo
+            # Formatação da célula do campo
+            for paragraph in cell_campo.paragraphs:
+                for run in paragraph.runs:
+                    run.font.name = 'Arial'
+                    run.font.size = Pt(11)
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(31, 78, 121)  # Azul escuro
+            
+            # Célula do valor (segunda coluna)
+            cell_valor = tabela.cell(i, 1)
+            cell_valor.text = valor
+            # Formatação da célula do valor
+            for paragraph in cell_valor.paragraphs:
+                for run in paragraph.runs:
+                    run.font.name = 'Arial'
+                    run.font.size = Pt(11)
+                    run.font.color.rgb = RGBColor(0, 0, 0)  # Preto
+        
+        # Aplicar bordas e fundo
+        self._aplicar_estilo_tabela(tabela, (248, 249, 250))
         
     def adicionar_metodologia(self):
         """Adiciona a seção de metodologia (texto padrão)"""
@@ -95,31 +175,63 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
         if dados_scraper is not None and not dados_scraper.empty:
             # Criar tabela com dados do scraper
             tabela = self.document.add_table(rows=1, cols=6)
-            tabela.style = 'Table Grid'
+            tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+            
+            # Configurar largura das colunas
+            for row in tabela.rows:
+                row.cells[0].width = Inches(0.6)  # Nº
+                row.cells[1].width = Inches(2.2)  # Localização
+                row.cells[2].width = Inches(1.2)  # Área
+                row.cells[3].width = Inches(1.2)  # Área Construída
+                row.cells[4].width = Inches(1.8)  # Preço
+                row.cells[5].width = Inches(1.8)  # Valor Unitário
             
             # Cabeçalho da tabela
             header_cells = tabela.rows[0].cells
-            header_cells[0].text = 'Nº'
-            header_cells[1].text = 'Localização'
-            header_cells[2].text = 'Área Terreno'
-            header_cells[3].text = 'Área Construída'
-            header_cells[4].text = 'Preço Anunciado'
-            header_cells[5].text = 'Valor Unitário (m²)'
+            headers = ['Nº', 'Localização', 'Área (m²)', 'Área Construída (m²)', 'Preço Anunciado', 'Valor Unitário (m²)']
+            
+            for i, header_text in enumerate(headers):
+                header_cells[i].text = header_text
+                # Formatação do cabeçalho
+                for paragraph in header_cells[i].paragraphs:
+                    for run in paragraph.runs:
+                        run.font.name = 'Arial'
+                        run.font.size = Pt(10)
+                        run.font.bold = True
+                        run.font.color.rgb = RGBColor(255, 255, 255)  # Branco
+                # Cor de fundo do cabeçalho
+                shading_elm = parse_xml(r'<w:shd {} w:fill="{:02X}{:02X}{:02X}"/>'.format(
+                    nsdecls('w'), 46, 125, 50))  # Verde escuro
+                header_cells[i]._tc.get_or_add_tcPr().append(shading_elm)
             
             # Adicionar dados do scraper (top 6 imóveis)
             df_sorted = dados_scraper.sort_values('R$/M2').head(6)
             
             for idx, (_, row) in enumerate(df_sorted.iterrows(), 1):
                 row_cells = tabela.add_row().cells
-                row_cells[0].text = str(idx)
-                row_cells[1].text = str(row.get('Endereco', 'N/A'))[:30] + '...' if len(str(row.get('Endereco', 'N/A'))) > 30 else str(row.get('Endereco', 'N/A'))
-                row_cells[2].text = f"{row.get('M2', 0):.0f} m²"
-                row_cells[3].text = f"{row.get('M2', 0):.0f} m²"  # Assumindo que área construída = área total
-                row_cells[4].text = f"R$ {row.get('Preco', 0):,.0f}"
-                row_cells[5].text = f"R$ {row.get('R$/M2', 0):,.0f}"
+                dados_linha = [
+                    str(idx),
+                    str(row.get('Endereco', 'N/A'))[:30] + '...' if len(str(row.get('Endereco', 'N/A'))) > 30 else str(row.get('Endereco', 'N/A')),
+                    f"{row.get('M2', 0):.0f}",
+                    f"{row.get('M2', 0):.0f}",  # Assumindo que área construída = área total
+                    f"R$ {row.get('Preco', 0):,.0f}",
+                    f"R$ {row.get('R$/M2', 0):,.0f}"
+                ]
+                
+                for i, dado in enumerate(dados_linha):
+                    row_cells[i].text = dado
+                    # Formatação das células de dados
+                    for paragraph in row_cells[i].paragraphs:
+                        for run in paragraph.runs:
+                            run.font.name = 'Arial'
+                            run.font.size = Pt(9)
+                            run.font.color.rgb = RGBColor(0, 0, 0)  # Preto
             
             # Adicionar parágrafo sobre imóveis descartados
             self.document.add_paragraph("", style='TextoLaudo')
+            
+            # Aplicar bordas na tabela
+            self._aplicar_estilo_tabela(tabela)
             
             # Calcular valor máximo para descarte
             preco_maximo = dados_scraper['Preco'].quantile(0.9)  # 90% dos imóveis
@@ -251,8 +363,7 @@ considerando as especificidades da amostra utilizada e os ajustes técnicos real
         """Adiciona a seção de assinatura do avaliador"""
         self.document.add_paragraph("8. ASSINATURA DO AVALIADOR", style='SubtituloLaudo')
         
-        # Adicionar espaço para assinatura
-        self.document.add_paragraph("", style='TextoLaudo')
+        # Espaço para assinatura
         self.document.add_paragraph("", style='TextoLaudo')
         
         # Dados do avaliador
@@ -260,16 +371,52 @@ considerando as especificidades da amostra utilizada e os ajustes técnicos real
         estado_assinatura = dados_avaliador.get('estado_assinatura', 'SP')
         data_laudo = dados_avaliador.get('data_laudo', datetime.now().date())
         
-        assinatura_texto = f"""{cidade_assinatura} - {estado_assinatura}, {data_laudo.strftime('%d de %B de %Y')}
-
-{dados_avaliador.get('nome', 'Jhonni Balbino da Silva')}
-Perito Avaliador Imobiliário
-CRECI: {dados_avaliador.get('creci', '296769-F')} | CNAI: {dados_avaliador.get('cnai', '051453')}
-{dados_avaliador.get('telefone', '(11) 98796 8206')}
-{dados_avaliador.get('email', 'contato@avaliarapido.com.br')}
-{dados_avaliador.get('website', 'www.avaliarapido.com.br')}"""
+        # Criar parágrafo centralizado para assinatura
+        assinatura_para = self.document.add_paragraph()
+        assinatura_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         
-        self.document.add_paragraph(assinatura_texto, style='TextoLaudo')
+        # Data e local
+        run_data = assinatura_para.add_run(f"{cidade_assinatura} - {estado_assinatura}, {data_laudo.strftime('%d de %B de %Y')}\n\n")
+        run_data.font.name = 'Arial'
+        run_data.font.size = Pt(11)
+        run_data.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Nome do avaliador
+        run_nome = assinatura_para.add_run(f"{dados_avaliador.get('nome', 'Jhonni Balbino da Silva')}\n")
+        run_nome.font.name = 'Arial'
+        run_nome.font.size = Pt(11)
+        run_nome.font.bold = True
+        run_nome.font.color.rgb = RGBColor(31, 78, 121)  # Azul escuro
+        
+        # Cargo
+        run_cargo = assinatura_para.add_run("Perito Avaliador Imobiliário\n")
+        run_cargo.font.name = 'Arial'
+        run_cargo.font.size = Pt(11)
+        run_cargo.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # CRECI e CNAI
+        run_creci = assinatura_para.add_run(f"CRECI: {dados_avaliador.get('creci', '296769-F')} | CNAI: {dados_avaliador.get('cnai', '051453')}\n")
+        run_creci.font.name = 'Arial'
+        run_creci.font.size = Pt(11)
+        run_creci.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Telefone
+        run_telefone = assinatura_para.add_run(f"{dados_avaliador.get('telefone', '(11) 98796 8206')}\n")
+        run_telefone.font.name = 'Arial'
+        run_telefone.font.size = Pt(11)
+        run_telefone.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Email
+        run_email = assinatura_para.add_run(f"{dados_avaliador.get('email', 'contato@avaliarapido.com.br')}\n")
+        run_email.font.name = 'Arial'
+        run_email.font.size = Pt(11)
+        run_email.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Website
+        run_website = assinatura_para.add_run(f"{dados_avaliador.get('website', 'www.avaliarapido.com.br')}")
+        run_website.font.name = 'Arial'
+        run_website.font.size = Pt(11)
+        run_website.font.color.rgb = RGBColor(0, 0, 0)
         
     def _converter_valor_extenso(self, valor):
         """Converte valor numérico para extenso"""
