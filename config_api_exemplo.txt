@@ -1,0 +1,16 @@
+# Arquivo de exemplo para configuração das APIs
+# Copie este conteúdo para um arquivo .env na raiz do projeto
+
+# Chave da API Tavily (necessária para pesquisa de localidade)
+TAVILY_API_KEY=sua_chave_tavily_aqui
+
+# Outras configurações opcionais
+DEBUG=False
+MAX_PAGINAS_SCRAPING=5
+TIMEOUT_SCRAPING=30
+
+# Instruções:
+# 1. Crie um arquivo chamado .env na raiz do projeto
+# 2. Copie o conteúdo acima para o arquivo .env
+# 3. Substitua "sua_chave_tavily_aqui" pela sua chave real da API Tavily
+# 4. Salve o arquivo .env
