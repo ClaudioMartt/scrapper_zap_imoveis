@@ -132,8 +132,7 @@ def testar_gerador_docx():
             'loteamento': 'Jardim Santa Virgínia',
             'cidade': 'Taquarituba',
             'estado': 'SP',
-            'tipo_construcao': 'Alvenaria',
-            'cobertura': 'Telhas'
+            'descricao': 'Casa térrea em alvenaria com telhas cerâmicas, acabamento em gesso, piso cerâmico, portas e janelas em madeira, sistema elétrico e hidráulico completo.'
         }
         
         dados_avaliador = {
@@ -227,8 +226,7 @@ def testar_gerador_pdf():
             'loteamento': 'Jardim Santa Virgínia',
             'cidade': 'Taquarituba',
             'estado': 'SP',
-            'tipo_construcao': 'Alvenaria',
-            'cobertura': 'Telhas'
+            'descricao': 'Casa térrea em alvenaria com telhas cerâmicas, acabamento em gesso, piso cerâmico, portas e janelas em madeira, sistema elétrico e hidráulico completo.'
         }
         
         dados_avaliador = {

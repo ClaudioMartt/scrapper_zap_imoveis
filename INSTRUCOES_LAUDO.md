@@ -84,7 +84,7 @@ python gerador_laudo_docx.py
 - Loteamento/bairro
 - Cidade/estado
 - Tipo de construção
-- Tipo de cobertura
+- Descrição detalhada do imóvel
 
 ### Dados do Avaliador
 - Nome completo

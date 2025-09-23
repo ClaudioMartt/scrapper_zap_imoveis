@@ -62,16 +62,11 @@ class LaudoFormulario:
                 index=0
             )
             
-            self.dados_imovel['tipo_construcao'] = st.selectbox(
-                "Tipo de Construção",
-                ["Alvenaria", "Concreto", "Madeira", "Mista"],
-                index=0
-            )
-            
-            self.dados_imovel['cobertura'] = st.text_input(
-                "Tipo de Cobertura",
-                placeholder="Ex: Telhas",
-                value="Telhas"
+            self.dados_imovel['descricao'] = st.text_area(
+                "Descrição do Imóvel",
+                placeholder="Descreva as características principais do imóvel, tipo de construção, cobertura, acabamentos, etc.",
+                height=100,
+                help="Descreva detalhadamente as características do imóvel"
             )
     
     def mostrar_formulario_avaliador(self):
@@ -148,7 +143,7 @@ class LaudoFormulario:
         """Valida se todos os dados obrigatórios foram preenchidos"""
         campos_obrigatorios_imovel = [
             'numero_matricula', 'cartorio', 'area_terreno', 'area_construida',
-            'loteamento', 'cidade', 'estado'
+            'loteamento', 'cidade', 'estado', 'descricao'
         ]
         
         campos_obrigatorios_avaliador = [

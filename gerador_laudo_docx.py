@@ -118,8 +118,7 @@ em conformidade com a ABNT NBR 14653-1 (Procedimentos Gerais) e NBR 14653-2 (Im�
             ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
             ['Bairro:', dados_imovel.get('Bairro', 'N/A')],
             ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
-            ['Tipo de Construção:', dados_imovel.get('tipo_construcao', 'N/A')],
-            ['Cobertura:', dados_imovel.get('cobertura', 'N/A')]
+            ['Descrição:', dados_imovel.get('descricao', 'N/A')]
         ]
         
         tabela = self.document.add_table(rows=len(dados_tabela), cols=2)
@@ -504,8 +503,7 @@ def main():
         'Bairro': 'Jardim Santa Virgínia',
         'cidade': 'Taquarituba',
         'estado': 'SP',
-        'tipo_construcao': 'Alvenaria',
-        'cobertura': 'Telhas'
+        'descricao': 'Casa térrea em alvenaria com telhas cerâmicas, acabamento em gesso, piso cerâmico, portas e janelas em madeira, sistema elétrico e hidráulico completo.'
     }
     
     dados_avaliador = {

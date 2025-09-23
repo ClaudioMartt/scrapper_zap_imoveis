@@ -105,8 +105,7 @@ class GeradorLaudoPdf:
             ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
             ['Loteamento:', dados_imovel.get('loteamento', 'N/A')],
             ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
-            ['Tipo de Construção:', dados_imovel.get('tipo_construcao', 'N/A')],
-            ['Cobertura:', dados_imovel.get('cobertura', 'N/A')]
+            ['Descrição:', dados_imovel.get('descricao', 'N/A')]
         ]
         
         # Calcular larguras para ocupar toda a página (A4 = 21cm, margens = 4cm, sobra = 17cm)
@@ -421,8 +420,7 @@ def main():
         'loteamento': 'Jardim Santa Virgínia',
         'cidade': 'Taquarituba',
         'estado': 'SP',
-        'tipo_construcao': 'Alvenaria',
-        'cobertura': 'Telhas'
+        'descricao': 'Casa térrea em alvenaria com telhas cerâmicas, acabamento em gesso, piso cerâmico, portas e janelas em madeira, sistema elétrico e hidráulico completo.'
     }
     
     dados_avaliador = {
