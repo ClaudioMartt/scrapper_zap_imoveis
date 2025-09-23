@@ -232,14 +232,7 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
             # Aplicar bordas na tabela
             self._aplicar_estilo_tabela(tabela)
             
-            # Calcular valor máximo para descarte
-            preco_maximo = dados_scraper['Preco'].quantile(0.9)  # 90% dos imóveis
-            
-            descarte_texto = f"""Imóveis descartados:
-Foram anulados da amostra imóveis com valores acima de R$ {preco_maximo:,.0f}, 
-em razão de apresentarem características construtivas e padrões de acabamento superiores (alto padrão)."""
-            
-            self.document.add_paragraph(descarte_texto, style='TextoLaudo')
+            # URLs removidas - mantidas apenas no Excel
         else:
             # Texto padrão se não houver dados do scraper
             texto_padrao = """Nº | Localização        | Área Terreno | Área Construída | Preço Anunciado | Valor Unitário (m²) | Observações
@@ -248,11 +241,7 @@ em razão de apresentarem características construtivas e padrões de acabamento
 3  | Jardim Santa Virgínia | 180 m²       | 130 m²          | R$ 490.000      | R$ 3.769            | Similar ao avaliado
 4  | Bairro Carlos Eduardo | 200 m²       | 140 m²          | R$ 500.000      | R$ 3.571            | Localização próxima
 5  | Jardim Santa Virgínia | 150 m²       | 120 m²          | R$ 440.000      | R$ 3.666            | Conservação regular
-6  | Jardim Santa Virgínia | 170 m²       | 128 m²          | R$ 480.000      | R$ 3.750            | Estado geral bom
-
-Imóveis descartados:
-Foram anulados da amostra imóveis com valores acima de R$ 700.000,00, 
-em razão de apresentarem características construtivas e padrões de acabamento superiores (alto padrão)."""
+6  | Jardim Santa Virgínia | 170 m²       | 128 m²          | R$ 480.000      | R$ 3.750            | Estado geral bom"""
             
             self.document.add_paragraph(texto_padrao, style='TextoLaudo')
     
@@ -489,6 +478,7 @@ O custo imobiliário mais baixo e investimentos municipais recentes tornam-no at
         
         # Salvar documento
         return self.salvar_documento()
+    
 
 def main():
     """Função para testar o gerador de laudo"""

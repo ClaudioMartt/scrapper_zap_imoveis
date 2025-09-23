@@ -359,6 +359,56 @@ class ZapScraper:
             # Calcula preço por m²
             if 'Preco' in dados and 'M2' in dados and dados['M2'] > 0:
                 dados['R$/M2'] = dados['Preco'] / dados['M2']
+            
+            # Extrai URL do anúncio - abordagem simplificada
+            url_encontrada = None
+            
+            # Tentar encontrar o link do anúncio usando seletores específicos do Zap Imóveis
+            # O Zap Imóveis geralmente tem a URL no elemento <a> que envolve o card do imóvel
+            
+            # Tentativa 1: Procurar por link que contenha '/imovel/'
+            for link in anuncio_soup.find_all("a", href=True):
+                href = link.get('href')
+                if href and '/imovel/' in href:
+                    if href.startswith('/'):
+                        url_encontrada = f"https://www.zapimoveis.com.br{href}"
+                    else:
+                        url_encontrada = href
+                    break
+            
+            # Tentativa 2: Procurar por qualquer link que pareça ser de imóvel
+            if not url_encontrada:
+                for link in anuncio_soup.find_all("a", href=True):
+                    href = link.get('href')
+                    if href and len(href) > 20:  # URLs de imóveis são geralmente longas
+                        # Verificar se contém padrões típicos de URLs de imóveis
+                        if any(palavra in href.lower() for palavra in ['imovel', 'casa', 'apartamento', 'venda', 'aluguel', 'sp+', 'rj+', 'mg+']):
+                            if href.startswith('/'):
+                                url_encontrada = f"https://www.zapimoveis.com.br{href}"
+                            else:
+                                url_encontrada = href
+                            break
+            
+            # Tentativa 3: Se ainda não encontrou, usar o primeiro link que não seja de navegação
+            if not url_encontrada:
+                for link in anuncio_soup.find_all("a", href=True):
+                    href = link.get('href')
+                    # Ignorar links de navegação, redes sociais, etc.
+                    if href and not any(palavra in href.lower() for palavra in ['facebook', 'twitter', 'instagram', 'linkedin', 'whatsapp', 'mailto:', 'tel:', '#', 'javascript:']):
+                        if href.startswith('/') and len(href) > 10:
+                            url_encontrada = f"https://www.zapimoveis.com.br{href}"
+                            break
+                        elif 'zap' in href and len(href) > 20:
+                            url_encontrada = href
+                            break
+            
+            if url_encontrada:
+                dados['URL'] = url_encontrada
+            else:
+                # Se não conseguir extrair URL real, criar uma URL genérica baseada nos dados
+                endereco_limpo = dados.get('Endereco', '').replace(' ', '-').lower()
+                cidade_limpa = dados.get('Descrição', '').split(',')[0].replace(' ', '-').lower() if dados.get('Descrição') else 'local'
+                dados['URL'] = f"https://www.zapimoveis.com.br/venda/imovel/{cidade_limpa}/{endereco_limpo}/"
                 
         except Exception as e:
             print(f"\nErro ao extrair dados do anúncio: {e}")

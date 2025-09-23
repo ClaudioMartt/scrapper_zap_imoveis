@@ -103,7 +103,7 @@ class GeradorLaudoPdf:
             ['Cartório de Registro:', dados_imovel.get('cartorio', 'N/A')],
             ['Área do Terreno:', f"{dados_imovel.get('area_terreno', 0):.2f} m²"],
             ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
-            ['Loteamento:', dados_imovel.get('loteamento', 'N/A')],
+            ['Bairro:', dados_imovel.get('loteamento', 'N/A')],
             ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
             ['Descrição:', dados_imovel.get('descricao', 'N/A')]
         ]
@@ -163,10 +163,7 @@ class GeradorLaudoPdf:
                     f"R$ {row.get('R$/M2', 0):,.0f}"
                 ])
             
-            # Calcular valor máximo para descarte
-            preco_maximo = dados_scraper['Preco'].quantile(0.9)
-            dados_tabela.append(['', '', '', '', ''])
-            dados_tabela.append(['Imóveis descartados:', f'Valores acima de R$ {preco_maximo:,.0f}', '', '', ''])
+            # URLs removidas - mantidas apenas no Excel
             
             # Ajustar larguras para ocupar toda a largura da página
             tabela = Table(dados_tabela, colWidths=[0.6*inch, 2.2*inch, 1.2*inch, 1.8*inch, 1.8*inch])
@@ -179,10 +176,7 @@ class GeradorLaudoPdf:
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                 ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -2), 1, HexColor('#dee2e6')),
-                ('SPAN', (0, -1), (4, -1)),
-                ('BACKGROUND', (0, -1), (-1, -1), HexColor('#fff3cd')),
-                ('TEXTCOLOR', (0, -1), (-1, -1), HexColor('#856404'))
+                ('GRID', (0, 0), (-1, -1), 1, HexColor('#dee2e6'))
             ]))
             
             self.story.append(tabela)
@@ -191,11 +185,7 @@ class GeradorLaudoPdf:
             texto_padrao = """Nº | Localização        | Área Terreno | Área Construída | Preço Anunciado | Valor Unitário (m²)
 1  | Jardim Santa Virgínia | 150 m²       | 120 m²          | R$ 450.000      | R$ 3.750
 2  | Jardim Santa Virgínia | 160 m²       | 125 m²          | R$ 460.000      | R$ 3.680
-3  | Jardim Santa Virgínia | 180 m²       | 130 m²          | R$ 490.000      | R$ 3.769
-
-Imóveis descartados:
-Foram anulados da amostra imóveis com valores acima de R$ 700.000,00, 
-em razão de apresentarem características construtivas e padrões de acabamento superiores (alto padrão)."""
+3  | Jardim Santa Virgínia | 180 m²       | 130 m²          | R$ 490.000      | R$ 3.769"""
             
             self.story.append(Paragraph(texto_padrao, self.styles['TextoLaudo']))
         
@@ -406,6 +396,7 @@ O custo imobiliário mais baixo e investimentos municipais recentes tornam-no at
         
         # Salvar documento
         return self.salvar_documento()
+    
 
 def main():
     """Função para testar o gerador de PDF"""

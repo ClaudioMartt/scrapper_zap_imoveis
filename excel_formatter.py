@@ -341,6 +341,11 @@ class ExcelFormatter:
             nome_arquivo = os.path.join(pasta_arquivos, f'dados_zap_formatado_{timestamp}.xlsx')
         
         try:
+            # Remover coluna URL se existir
+            if 'URL' in df.columns:
+                df = df.drop('URL', axis=1)
+                print("🗑️ Coluna 'URL' removida do Excel")
+            
             # Criar todas as abas
             self.criar_aba_dados_completos(df)
             self.criar_aba_resumo_estatistico(df)

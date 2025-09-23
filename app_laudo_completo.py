@@ -160,36 +160,42 @@ class AppLaudoCompleto:
             st.info("Será utilizado texto padrão no laudo.")
             return None
         
-        with st.spinner("Gerando informações de localidade (instantâneo)..."):
-            try:
-                # Adicionar barra de progresso
-                progress_bar = st.progress(0)
-                status_text = st.empty()
+        # Verificar se há problemas com as APIs
+        if not hasattr(self.pesquisa_localidade, 'agent') or not self.pesquisa_localidade.agent:
+            st.warning("⚠️ APIs não configuradas. Usando texto padrão.")
+            st.info("Será utilizado texto padrão no laudo.")
+            return None
+        
+        try:
+            # Adicionar barra de progresso
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.text("🔄 Iniciando pesquisa...")
+            progress_bar.progress(25)
+            
+            # Executar pesquisa com timeout implícito
+            texto_pesquisa = self.pesquisa_localidade.gerar_texto_pesquisa_localidade(cidade, bairro)
+            
+            progress_bar.progress(100)
+            status_text.text("✅ Pesquisa concluída!")
+            
+            if texto_pesquisa:
+                st.success("✅ Pesquisa de localidade concluída!")
                 
-                status_text.text("🔄 Iniciando pesquisa...")
-                progress_bar.progress(25)
-                
-                texto_pesquisa = self.pesquisa_localidade.gerar_texto_pesquisa_localidade(cidade, bairro)
-                
-                progress_bar.progress(100)
-                status_text.text("✅ Pesquisa concluída!")
-                
-                if texto_pesquisa:
-                    st.success("✅ Pesquisa de localidade concluída!")
-                    
-                    # Mostrar preview do texto
-                    st.subheader("📝 Preview da Pesquisa de Localidade")
-                    st.text_area("Texto gerado:", texto_pesquisa, height=200, disabled=True)
-                else:
-                    st.warning("⚠️ Não foram encontradas informações específicas sobre a localidade.")
-                    st.info("Será utilizado texto padrão no laudo.")
-                
-                return texto_pesquisa
-                
-            except Exception as e:
-                st.warning(f"⚠️ Erro na pesquisa de localidade: {str(e)}")
-                st.info("Usando texto padrão para a pesquisa de localidade.")
-                return None
+                # Mostrar preview do texto
+                st.subheader("📝 Preview da Pesquisa de Localidade")
+                st.text_area("Texto gerado:", texto_pesquisa, height=200, disabled=True)
+            else:
+                st.warning("⚠️ Não foram encontradas informações específicas sobre a localidade.")
+                st.info("Será utilizado texto padrão no laudo.")
+            
+            return texto_pesquisa
+            
+        except Exception as e:
+            st.warning(f"⚠️ Erro na pesquisa de localidade: {str(e)}")
+            st.info("Usando texto padrão para a pesquisa de localidade.")
+            return None
         
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -583,26 +589,33 @@ class AppLaudoCompleto:
                 # Mostrar progresso
                 self.mostrar_progresso(3, 4)
                 
-                # Etapa 3: Pesquisa de Localidade
-                texto_pesquisa = self.executar_pesquisa_localidade(dados_imovel)
-                st.session_state.texto_pesquisa = texto_pesquisa
+                # Etapa 3: Pesquisa de Localidade (apenas se não foi feita ainda)
+                if 'texto_pesquisa' not in st.session_state:
+                    texto_pesquisa = self.executar_pesquisa_localidade(dados_imovel)
+                    st.session_state.texto_pesquisa = texto_pesquisa
+                else:
+                    texto_pesquisa = st.session_state.texto_pesquisa
+                    st.info("✅ Pesquisa de localidade já realizada anteriormente.")
                 
-                # Botão para gerar arquivos
-                if st.button("📄 Gerar Laudos DOCX, PDF e Excel", type="primary"):
-                    # Mostrar progresso
-                    self.mostrar_progresso(4, 4)
-                    
-                    # Etapa 4: Gerar Arquivos
-                    arquivo_docx, arquivo_pdf, arquivo_excel = self.gerar_laudo_docx(
-                        dados_scraper, dados_imovel, dados_avaliador, texto_pesquisa
-                    )
-                    
-                    if arquivo_docx or arquivo_pdf or arquivo_excel:
-                        st.session_state.arquivo_docx = arquivo_docx
-                        st.session_state.arquivo_pdf = arquivo_pdf
-                        st.session_state.arquivo_excel = arquivo_excel
-                        st.session_state.etapa_atual = 5
-                        st.rerun()
+                # Botão para gerar arquivos (apenas se ainda não foram gerados)
+                if 'arquivo_docx' not in st.session_state and 'arquivo_pdf' not in st.session_state and 'arquivo_excel' not in st.session_state:
+                    if st.button("📄 Gerar Laudos DOCX, PDF e Excel", type="primary"):
+                        # Mostrar progresso
+                        self.mostrar_progresso(4, 4)
+                        
+                        # Etapa 4: Gerar Arquivos
+                        arquivo_docx, arquivo_pdf, arquivo_excel = self.gerar_laudo_docx(
+                            dados_scraper, dados_imovel, dados_avaliador, texto_pesquisa
+                        )
+                        
+                        if arquivo_docx or arquivo_pdf or arquivo_excel:
+                            st.session_state.arquivo_docx = arquivo_docx
+                            st.session_state.arquivo_pdf = arquivo_pdf
+                            st.session_state.arquivo_excel = arquivo_excel
+                            st.session_state.etapa_atual = 5
+                            st.rerun()
+                else:
+                    st.success("✅ Arquivos já foram gerados! Use os botões de download abaixo.")
                 
                 # Verificar se temos arquivos gerados da análise atual
                 if 'arquivo_docx' in st.session_state or 'arquivo_pdf' in st.session_state or 'arquivo_excel' in st.session_state:

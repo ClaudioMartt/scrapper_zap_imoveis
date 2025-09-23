@@ -52,9 +52,19 @@ class PesquisaLocalidadeIAFinal:
             # Query simples e direta para o Tavily
             query = f"""Informações sobre {bairro} em {cidade} São Paulo: comércio, serviços, lazer, segurança e potencial econômico. Foque especificamente no bairro {bairro}."""
             
-            # Executar pesquisa REAL no Tavily
-            response = self.agent.run(query)
-            tempo_pesquisa = time.time() - start_time
+            # Executar pesquisa REAL no Tavily com timeout
+            try:
+                response = self.agent.run(query)
+                tempo_pesquisa = time.time() - start_time
+                
+                # Verificar se demorou muito
+                if tempo_pesquisa > 20:
+                    print(f"⚠️ Pesquisa demorou {tempo_pesquisa:.1f}s, usando texto padrão")
+                    return self._gerar_texto_padrao_fallback(cidade, bairro)
+                    
+            except Exception as e:
+                print(f"❌ Erro na pesquisa Tavily: {e}")
+                return self._gerar_texto_padrao_fallback(cidade, bairro)
             
             print(f"⏱️ Pesquisa REAL concluída em {tempo_pesquisa:.1f} segundos")
             
