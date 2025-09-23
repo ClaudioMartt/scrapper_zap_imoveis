@@ -116,7 +116,7 @@ em conformidade com a ABNT NBR 14653-1 (Procedimentos Gerais) e NBR 14653-2 (Im�
             ['Endereço Completo:', dados_imovel.get('endereco_completo', 'N/A')],
             ['Área do Terreno:', f"{dados_imovel.get('area_terreno', 0):.2f} m²"],
             ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
-            ['Loteamento:', dados_imovel.get('loteamento', 'N/A')],
+            ['Bairro:', dados_imovel.get('Bairro', 'N/A')],
             ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
             ['Tipo de Construção:', dados_imovel.get('tipo_construcao', 'N/A')],
             ['Cobertura:', dados_imovel.get('cobertura', 'N/A')]
@@ -501,7 +501,7 @@ def main():
         'cartorio': 'Comarca de Taquarituba/SP, Livro nº 2 – Registro Geral',
         'area_terreno': 201.0,
         'area_construida': 134.59,
-        'loteamento': 'Jardim Santa Virgínia',
+        'Bairro': 'Jardim Santa Virgínia',
         'cidade': 'Taquarituba',
         'estado': 'SP',
         'tipo_construcao': 'Alvenaria',

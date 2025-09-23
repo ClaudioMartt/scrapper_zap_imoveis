@@ -45,9 +45,9 @@ class LaudoFormulario:
         
         with col2:
             self.dados_imovel['loteamento'] = st.text_input(
-                "Loteamento/Bairro",
+                "Bairro",
                 placeholder="Ex: Jardim Santa Virgínia",
-                help="Nome do loteamento ou bairro"
+                help="Nome Bairro"
             )
             
             self.dados_imovel['cidade'] = st.text_input(

@@ -7,7 +7,7 @@ import time
 # Importar módulos criados
 from zap_scraper import ZapScraper
 from laudo_formulario import LaudoFormulario
-from pesquisa_localidade_super_rapida import PesquisaLocalidadeSuperRapida
+from pesquisa_localidade_ia_final import PesquisaLocalidadeIAFinal
 from gerador_laudo_docx import GeradorLaudoDocx
 from gerador_laudo_pdf import GeradorLaudoPdf
 from excel_formatter import ExcelFormatter
@@ -16,7 +16,7 @@ class AppLaudoCompleto:
     def __init__(self):
         self.scraper = ZapScraper()
         self.formulario = LaudoFormulario()
-        self.pesquisa_localidade = PesquisaLocalidadeSuperRapida()
+        self.pesquisa_localidade = PesquisaLocalidadeIAFinal()
         self.gerador_docx = GeradorLaudoDocx()
         self.gerador_pdf = GeradorLaudoPdf()
         self.excel_formatter = ExcelFormatter()
