@@ -85,7 +85,6 @@ def testar_formulario():
         formulario.dados_imovel = {
             'numero_matricula': '11.072',
             'cartorio': 'Comarca de Taquarituba/SP',
-            'area_terreno': 201.0,
             'area_construida': 134.59,
             'loteamento': 'Jardim Santa Virgínia',
             'cidade': 'Taquarituba',
@@ -127,7 +126,6 @@ def testar_gerador_docx():
         dados_imovel = {
             'numero_matricula': '11.072',
             'cartorio': 'Comarca de Taquarituba/SP, Livro nº 2 – Registro Geral',
-            'area_terreno': 201.0,
             'area_construida': 134.59,
             'loteamento': 'Jardim Santa Virgínia',
             'cidade': 'Taquarituba',
@@ -221,7 +219,6 @@ def testar_gerador_pdf():
         dados_imovel = {
             'numero_matricula': '11.072',
             'cartorio': 'Comarca de Taquarituba/SP, Livro nº 2 – Registro Geral',
-            'area_terreno': 201.0,
             'area_construida': 134.59,
             'loteamento': 'Jardim Santa Virgínia',
             'cidade': 'Taquarituba',

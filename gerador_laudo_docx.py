@@ -114,7 +114,6 @@ em conformidade com a ABNT NBR 14653-1 (Procedimentos Gerais) e NBR 14653-2 (Im�
             ['Número da Matrícula:', dados_imovel.get('numero_matricula', 'N/A')],
             ['Cartório de Registro:', dados_imovel.get('cartorio', 'N/A')],
             ['Endereço Completo:', dados_imovel.get('endereco_completo', 'N/A')],
-            ['Área do Terreno:', f"{dados_imovel.get('area_terreno', 0):.2f} m²"],
             ['Área Construída:', f"{dados_imovel.get('area_construida', 0):.2f} m²"],
             ['Bairro:', dados_imovel.get('Bairro', 'N/A')],
             ['Cidade/Estado:', f"{dados_imovel.get('cidade', 'N/A')}/{dados_imovel.get('estado', 'N/A')}"],
@@ -253,51 +252,91 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
         """Adiciona a seção de determinação do valor de mercado"""
         self.document.add_paragraph("5. DETERMINAÇÃO DO VALOR DE MERCADO", style='SubtituloLaudo')
         
-        if dados_scraper is not None and not dados_scraper.empty:
-            # Calcular valor médio unitário
-            valor_medio_unitario = dados_scraper['R$/M2'].mean()
-            area_construida = dados_imovel.get('area_construida', 0)
-            valor_edificacao = valor_medio_unitario * area_construida
-            
-            # Calcular valor do terreno
-            valor_terreno_m2 = 800.0  # Valor padrão por m² do terreno
-            area_terreno = dados_imovel.get('area_terreno', 0)
-            valor_terreno = valor_terreno_m2 * area_terreno
-            
-            # Valor total
-            valor_total = valor_edificacao + valor_terreno
-            
-            determinacao_texto = f"""Com base na amostra válida, o valor médio unitário de referência para imóveis similares é de R$ {valor_medio_unitario:,.2f}/m² de área construída. 
-Considerando o imóvel avaliado possuir área construída de {area_construida:.2f} m², o valor estimado da edificação é de aproximadamente R$ {valor_edificacao:,.2f}.
-
-Adicionalmente, foi atribuída parcela relativa ao terreno, considerando valor médio de mercado na região de R$ {valor_terreno_m2:,.2f}/m². 
-Assim, para {area_terreno:.2f} m², resulta em aproximadamente R$ {valor_terreno:,.2f}. 
-
-Desta forma, o valor total estimado do imóvel é:
-R$ {valor_edificacao:,.2f} (edificação) + R$ {valor_terreno:,.2f} (terreno) = R$ {valor_total:,.2f}"""
-            
-        else:
-            # Valores padrão
-            valor_medio_unitario = 3700.0
-            area_construida = dados_imovel.get('area_construida', 134.59)
-            valor_edificacao = valor_medio_unitario * area_construida
-            
-            valor_terreno_m2 = 800.0
-            area_terreno = dados_imovel.get('area_terreno', 201.0)
-            valor_terreno = valor_terreno_m2 * area_terreno
-            
-            valor_total = valor_edificacao + valor_terreno
-            
-            determinacao_texto = f"""Com base na amostra válida, o valor médio unitário de referência para imóveis similares é de R$ {valor_medio_unitario:,.2f}/m² de área construída. 
-Considerando o imóvel avaliado possuir área construída de {area_construida:.2f} m², o valor estimado da edificação é de aproximadamente R$ {valor_edificacao:,.2f}.
-
-Adicionalmente, foi atribuída parcela relativa ao terreno, considerando valor médio de mercado na região de R$ {valor_terreno_m2:,.2f}/m². 
-Assim, para {area_terreno:.2f} m², resulta em aproximadamente R$ {valor_terreno:,.2f}. 
-
-Desta forma, o valor total estimado do imóvel é:
-R$ {valor_edificacao:,.2f} (edificação) + R$ {valor_terreno:,.2f} (terreno) = R$ {valor_total:,.2f}"""
+        # Inicializar variáveis
+        area_construida = dados_imovel.get('area_construida', 0)
+        valor_edificacao = 0
         
-        self.document.add_paragraph(determinacao_texto, style='TextoLaudo')
+        # Calcular valor médio unitário baseado nos dados do scraper
+        if dados_scraper is not None and not dados_scraper.empty:
+            df_top10 = dados_scraper.sort_values('R$/M2').head(10)
+            valor_medio_unitario = df_top10['R$/M2'].mean()
+        else:
+            valor_medio_unitario = 3700.0  # Valor padrão
+        
+        # Calcular valor da edificação apenas se área construída > 0
+        if area_construida > 0:
+            valor_edificacao = valor_medio_unitario * area_construida
+            
+        # Valor total é apenas o valor da edificação
+        valor_total = valor_edificacao
+        
+        # Criar tabela de cálculos condicionalmente
+        calculos_tabela = [['Descrição', 'Valor']]
+        
+        # Sempre mostrar valor médio unitário
+        calculos_tabela.append(['Valor médio unitário de referência:', f"R$ {valor_medio_unitario:,.2f}/m²"])
+        
+        # Mostrar área construída e valor da edificação apenas se área > 0
+        if area_construida > 0:
+            calculos_tabela.append(['Área construída do imóvel:', f"{area_construida:.2f} m²"])
+            calculos_tabela.append(['Valor estimado da edificação:', f"R$ {valor_edificacao:,.2f}"])
+        
+        # Sempre mostrar valor total
+        calculos_tabela.append(['', ''])  # Linha em branco
+        calculos_tabela.append(['VALOR TOTAL DO IMÓVEL:', f"R$ {valor_total:,.2f}"])
+        
+        # Criar tabela no documento
+        tabela = self.document.add_table(rows=len(calculos_tabela), cols=2)
+        tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # Configurar largura das colunas
+        for row in tabela.rows:
+            row.cells[0].width = Inches(4.2)
+            row.cells[1].width = Inches(2.5)
+        
+        # Preencher tabela
+        for i, (descricao, valor) in enumerate(calculos_tabela):
+            cell_desc = tabela.cell(i, 0)
+            cell_valor = tabela.cell(i, 1)
+            
+            cell_desc.text = descricao
+            cell_valor.text = valor
+            
+            # Formatação das células
+            for paragraph in cell_desc.paragraphs:
+                for run in paragraph.runs:
+                    run.font.name = 'Arial'
+                    run.font.size = Pt(10)
+                    if i == 0 or i == len(calculos_tabela) - 1:  # Cabeçalho e total
+                        run.font.bold = True
+                        run.font.color.rgb = RGBColor(255, 255, 255) if i == 0 else RGBColor(255, 255, 255)
+                    else:
+                        run.font.color.rgb = RGBColor(31, 78, 121) if descricao else RGBColor(0, 0, 0)
+            
+            for paragraph in cell_valor.paragraphs:
+                for run in paragraph.runs:
+                    run.font.name = 'Arial'
+                    run.font.size = Pt(10)
+                    if i == 0 or i == len(calculos_tabela) - 1:  # Cabeçalho e total
+                        run.font.bold = True
+                        run.font.color.rgb = RGBColor(255, 255, 255) if i == 0 else RGBColor(255, 255, 255)
+                    else:
+                        run.font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Aplicar cor de fundo no cabeçalho
+        shading_elm = parse_xml(r'<w:shd {} w:fill="{:02X}{:02X}{:02X}"/>'.format(
+            nsdecls('w'), 46, 125, 50))  # Verde escuro
+        tabela.cell(0, 0)._tc.get_or_add_tcPr().append(shading_elm)
+        tabela.cell(0, 1)._tc.get_or_add_tcPr().append(shading_elm)
+        
+        # Aplicar cor de fundo no total
+        shading_total = parse_xml(r'<w:shd {} w:fill="{:02X}{:02X}{:02X}"/>'.format(
+            nsdecls('w'), 31, 78, 121))  # Azul escuro
+        tabela.cell(len(calculos_tabela) - 1, 0)._tc.get_or_add_tcPr().append(shading_total)
+        tabela.cell(len(calculos_tabela) - 1, 1)._tc.get_or_add_tcPr().append(shading_total)
+        
+        # Aplicar bordas na tabela
+        self._aplicar_estilo_tabela(tabela)
         
     def adicionar_pesquisa_localidade(self, texto_pesquisa):
         """Adiciona a seção de pesquisa de localidade"""
@@ -327,18 +366,23 @@ O custo imobiliário mais baixo e investimentos municipais recentes tornam-no at
         """Adiciona a seção de conclusão"""
         self.document.add_paragraph("7. CONCLUSÃO", style='SubtituloLaudo')
         
+        # Inicializar variáveis
+        area_construida = dados_imovel.get('area_construida', 0)
+        valor_edificacao = 0
+        
+        # Calcular valor médio unitário baseado nos dados do scraper
         if dados_scraper is not None and not dados_scraper.empty:
-            valor_medio_unitario = dados_scraper['R$/M2'].mean()
-            area_construida = dados_imovel.get('area_construida', 0)
+            df_top10 = dados_scraper.sort_values('R$/M2').head(10)
+            valor_medio_unitario = df_top10['R$/M2'].mean()
+        else:
+            valor_medio_unitario = 3700.0  # Valor padrão
+        
+        # Calcular valor da edificação apenas se área construída > 0
+        if area_construida > 0:
             valor_edificacao = valor_medio_unitario * area_construida
             
-            valor_terreno_m2 = 800.0
-            area_terreno = dados_imovel.get('area_terreno', 0)
-            valor_terreno = valor_terreno_m2 * area_terreno
-            
-            valor_total = valor_edificacao + valor_terreno
-        else:
-            valor_total = 658800.0  # Valor padrão
+        # Valor total é apenas o valor da edificação
+        valor_total = valor_edificacao
         
         # Converter valor para extenso
         valor_extenso = self._converter_valor_extenso(valor_total)
@@ -492,7 +536,6 @@ def main():
     dados_imovel = {
         'numero_matricula': '11.072',
         'cartorio': 'Comarca de Taquarituba/SP, Livro nº 2 – Registro Geral',
-        'area_terreno': 201.0,
         'area_construida': 134.59,
         'Bairro': 'Jardim Santa Virgínia',
         'cidade': 'Taquarituba',

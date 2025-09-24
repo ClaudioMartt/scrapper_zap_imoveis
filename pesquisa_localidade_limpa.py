@@ -250,7 +250,7 @@ Potencial Econômico e de Crescimento Imobiliário:
 {bairro} em {cidade} possui potencial de desenvolvimento baseado na 
 localização e infraestrutura disponível na região.
 
-⚠️ NOTA: Informações gerais - configure a chave TAVILY_API_KEY para obter dados específicos e atualizados."""
+"""
     
     def verificar_configuracao(self):
         """Verifica se a configuração está correta"""

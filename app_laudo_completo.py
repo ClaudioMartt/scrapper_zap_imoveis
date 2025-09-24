@@ -511,7 +511,6 @@ class AppLaudoCompleto:
             
             st.write(f"**Imóvel avaliado:** {dados_imovel.get('loteamento', 'N/A')}, {dados_imovel.get('cidade', 'N/A')}")
             st.write(f"**Área construída:** {dados_imovel.get('area_construida', 0):.2f} m²")
-            st.write(f"**Área do terreno:** {dados_imovel.get('area_terreno', 0):.2f} m²")
         
         with col2:
             st.subheader("📄 Arquivos Gerados")

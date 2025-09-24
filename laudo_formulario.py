@@ -27,13 +27,6 @@ class LaudoFormulario:
                 help="Informações completas do cartório"
             )
             
-            self.dados_imovel['area_terreno'] = st.number_input(
-                "Área do Terreno (m²)",
-                min_value=0.0,
-                value=201.0,
-                step=0.1,
-                help="Área total do terreno em metros quadrados"
-            )
             
             self.dados_imovel['area_construida'] = st.number_input(
                 "Área Construída (m²)",
@@ -142,7 +135,7 @@ class LaudoFormulario:
     def validar_dados(self):
         """Valida se todos os dados obrigatórios foram preenchidos"""
         campos_obrigatorios_imovel = [
-            'numero_matricula', 'cartorio', 'area_terreno', 'area_construida',
+            'numero_matricula', 'cartorio', 'area_construida',
             'loteamento', 'cidade', 'estado', 'descricao'
         ]
         
