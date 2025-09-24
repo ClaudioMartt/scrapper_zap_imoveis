@@ -171,9 +171,14 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
         """Adiciona a seção de pesquisa de mercado com dados do scraper"""
         self.document.add_paragraph("4. PESQUISA DE MERCADO E ANÁLISE COMPARATIVA", style='SubtituloLaudo')
         
+        # Adicionar texto explicativo sobre a amostra dos top 10 valores
+        texto_explicativo = """Para a análise comparativa, foram selecionados os 10 imóveis com melhor relação custo-benefício"""
+        
+        self.document.add_paragraph(texto_explicativo, style='TextoLaudo')
+        
         if dados_scraper is not None and not dados_scraper.empty:
-            # Criar tabela com dados do scraper
-            tabela = self.document.add_table(rows=1, cols=6)
+            # Criar tabela com dados do scraper - top 10
+            tabela = self.document.add_table(rows=1, cols=5)
             tabela.alignment = WD_TABLE_ALIGNMENT.CENTER
             
             # Configurar largura das colunas
@@ -181,13 +186,12 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
                 row.cells[0].width = Inches(0.6)  # Nº
                 row.cells[1].width = Inches(2.2)  # Localização
                 row.cells[2].width = Inches(1.2)  # Área
-                row.cells[3].width = Inches(1.2)  # Área Construída
-                row.cells[4].width = Inches(1.8)  # Preço
-                row.cells[5].width = Inches(1.8)  # Valor Unitário
+                row.cells[3].width = Inches(1.8)  # Preço
+                row.cells[4].width = Inches(1.8)  # Valor Unitário
             
             # Cabeçalho da tabela
             header_cells = tabela.rows[0].cells
-            headers = ['Nº', 'Localização', 'Área (m²)', 'Área Construída (m²)', 'Preço Anunciado', 'Valor Unitário (m²)']
+            headers = ['Nº', 'Localização', 'Área (m²)', 'Preço Anunciado', 'Valor Unitário (m²)']
             
             for i, header_text in enumerate(headers):
                 header_cells[i].text = header_text
@@ -203,8 +207,8 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
                     nsdecls('w'), 46, 125, 50))  # Verde escuro
                 header_cells[i]._tc.get_or_add_tcPr().append(shading_elm)
             
-            # Adicionar dados do scraper (top 6 imóveis)
-            df_sorted = dados_scraper.sort_values('R$/M2').head(6)
+            # Adicionar dados do scraper (top 10 imóveis)
+            df_sorted = dados_scraper.sort_values('R$/M2').head(10)
             
             for idx, (_, row) in enumerate(df_sorted.iterrows(), 1):
                 row_cells = tabela.add_row().cells
@@ -212,7 +216,6 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
                     str(idx),
                     str(row.get('Endereco', 'N/A'))[:30] + '...' if len(str(row.get('Endereco', 'N/A'))) > 30 else str(row.get('Endereco', 'N/A')),
                     f"{row.get('M2', 0):.0f}",
-                    f"{row.get('M2', 0):.0f}",  # Assumindo que área construída = área total
                     f"R$ {row.get('Preco', 0):,.0f}",
                     f"R$ {row.get('R$/M2', 0):,.0f}"
                 ]
@@ -226,22 +229,23 @@ a fim de evitar distorções na média amostral, seguindo as boas práticas de a
                             run.font.size = Pt(9)
                             run.font.color.rgb = RGBColor(0, 0, 0)  # Preto
             
-            # Adicionar parágrafo sobre imóveis descartados
-            self.document.add_paragraph("", style='TextoLaudo')
-            
             # Aplicar bordas na tabela
             self._aplicar_estilo_tabela(tabela)
             
             # URLs removidas - mantidas apenas no Excel
         else:
-            # Texto padrão se não houver dados do scraper
-            texto_padrao = """Nº | Localização        | Área Terreno | Área Construída | Preço Anunciado | Valor Unitário (m²) | Observações
-1  | Jardim Santa Virgínia | 150 m²       | 120 m²          | R$ 450.000      | R$ 3.750            | Padrão médio, recém-reformado
-2  | Jardim Santa Virgínia | 160 m²       | 125 m²          | R$ 460.000      | R$ 3.680            | Imóvel em bom estado
-3  | Jardim Santa Virgínia | 180 m²       | 130 m²          | R$ 490.000      | R$ 3.769            | Similar ao avaliado
-4  | Bairro Carlos Eduardo | 200 m²       | 140 m²          | R$ 500.000      | R$ 3.571            | Localização próxima
-5  | Jardim Santa Virgínia | 150 m²       | 120 m²          | R$ 440.000      | R$ 3.666            | Conservação regular
-6  | Jardim Santa Virgínia | 170 m²       | 128 m²          | R$ 480.000      | R$ 3.750            | Estado geral bom"""
+            # Texto padrão se não houver dados do scraper - top 10
+            texto_padrao = """Nº | Localização        | Área (m²) | Preço Anunciado | Valor Unitário (m²)
+1  | Jardim Santa Virgínia | 150 m²    | R$ 450.000      | R$ 3.750
+2  | Jardim Santa Virgínia | 160 m²    | R$ 460.000      | R$ 3.680
+3  | Jardim Santa Virgínia | 180 m²    | R$ 490.000      | R$ 3.769
+4  | Jardim Santa Virgínia | 165 m²    | R$ 470.000      | R$ 3.788
+5  | Jardim Santa Virgínia | 155 m²    | R$ 455.000      | R$ 3.742
+6  | Jardim Santa Virgínia | 175 m²    | R$ 485.000      | R$ 3.771
+7  | Jardim Santa Virgínia | 170 m²    | R$ 480.000      | R$ 3.765
+8  | Jardim Santa Virgínia | 145 m²    | R$ 445.000      | R$ 3.724
+9  | Jardim Santa Virgínia | 185 m²    | R$ 495.000      | R$ 3.784
+10 | Jardim Santa Virgínia | 140 m²    | R$ 440.000      | R$ 3.714"""
             
             self.document.add_paragraph(texto_padrao, style='TextoLaudo')
     

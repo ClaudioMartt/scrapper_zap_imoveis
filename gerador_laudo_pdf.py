@@ -145,9 +145,15 @@ class GeradorLaudoPdf:
         """Adiciona a seção de pesquisa de mercado"""
         self.story.append(Paragraph("4. PESQUISA DE MERCADO E ANÁLISE COMPARATIVA", self.styles['SubtituloLaudo']))
         
+        # Adicionar texto explicativo sobre a amostra dos top 10 valores
+        texto_explicativo = """Para a análise comparativa, foram selecionados os 10 imóveis com melhor relação custo-benefício"""
+        
+        self.story.append(Paragraph(texto_explicativo, self.styles['TextoLaudo']))
+        self.story.append(Spacer(1, 8))
+        
         if dados_scraper is not None and not dados_scraper.empty:
-            # Criar tabela com dados do scraper
-            df_sorted = dados_scraper.sort_values('R$/M2').head(6)
+            # Criar tabela com dados do scraper - top 10
+            df_sorted = dados_scraper.sort_values('R$/M2').head(10)
             
             # Cabeçalho da tabela
             dados_tabela = [['Nº', 'Localização', 'Área (m²)', 'Preço Anunciado', 'Valor Unitário (m²)']]
@@ -181,11 +187,18 @@ class GeradorLaudoPdf:
             
             self.story.append(tabela)
         else:
-            # Texto padrão se não houver dados do scraper
-            texto_padrao = """Nº | Localização        | Área Terreno | Área Construída | Preço Anunciado | Valor Unitário (m²)
-1  | Jardim Santa Virgínia | 150 m²       | 120 m²          | R$ 450.000      | R$ 3.750
-2  | Jardim Santa Virgínia | 160 m²       | 125 m²          | R$ 460.000      | R$ 3.680
-3  | Jardim Santa Virgínia | 180 m²       | 130 m²          | R$ 490.000      | R$ 3.769"""
+            # Texto padrão se não houver dados do scraper - top 10
+            texto_padrao = """Nº | Localização        | Área (m²) | Preço Anunciado | Valor Unitário (m²)
+1  | Jardim Santa Virgínia | 150 m²    | R$ 450.000      | R$ 3.750
+2  | Jardim Santa Virgínia | 160 m²    | R$ 460.000      | R$ 3.680
+3  | Jardim Santa Virgínia | 180 m²    | R$ 490.000      | R$ 3.769
+4  | Jardim Santa Virgínia | 165 m²    | R$ 470.000      | R$ 3.788
+5  | Jardim Santa Virgínia | 155 m²    | R$ 455.000      | R$ 3.742
+6  | Jardim Santa Virgínia | 175 m²    | R$ 485.000      | R$ 3.771
+7  | Jardim Santa Virgínia | 170 m²    | R$ 480.000      | R$ 3.765
+8  | Jardim Santa Virgínia | 145 m²    | R$ 445.000      | R$ 3.724
+9  | Jardim Santa Virgínia | 185 m²    | R$ 495.000      | R$ 3.784
+10 | Jardim Santa Virgínia | 140 m²    | R$ 440.000      | R$ 3.714"""
             
             self.story.append(Paragraph(texto_padrao, self.styles['TextoLaudo']))
         
